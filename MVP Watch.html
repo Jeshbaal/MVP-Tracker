@@ -1,0 +1,3431 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)https://gregoriosandoval.github.io/MVPTracker/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(15) MVP Watch</title>
+<link rel="manifest" href="https://gregoriosandoval.github.io/MVPTracker/manifest.json">
+<meta name="theme-color" content="#100e1a">
+<link rel="icon" href="https://gregoriosandoval.github.io/MVPTracker/icon-192.png">
+<link rel="apple-touch-icon" href="https://gregoriosandoval.github.io/MVPTracker/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MVP Watch">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./MVP Watch_files/css2" rel="stylesheet">
+<script src="./MVP Watch_files/firebase-app-compat.js.download"></script>
+<script src="./MVP Watch_files/firebase-auth-compat.js.download"></script>
+<script src="./MVP Watch_files/firebase-firestore-compat.js.download"></script>
+<style>
+  :root{
+    --bg: #100e1a;
+    --bg-alt: #16132200;
+    --panel: #1a1626;
+    --panel-edge: #2c2540;
+    --gold: #c9a34e;
+    --gold-bright: #e6c877;
+    --red: #b0483f;
+    --green: #5a9c82;
+    --text: #e9e4d8;
+    --text-dim: #8d8698;
+    --text-faint: #5a5468;
+    --input-bg: #0e0c17;
+    --row-border: #211c33;
+    --text-on-gold: #1a1626;
+    --glow1: #241d38;
+    --glow2: #1c1730;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, var(--glow1) 0%, transparent 55%),
+      radial-gradient(900px 600px at 100% 10%, var(--glow2) 0%, transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:0 0 80px;
+    transition:background-color .25s, color .25s;
+  }
+  ::selection{ background:var(--gold); color:var(--text-on-gold); }
+
+  /* Light theme — same fantasy-manuscript identity, inverted for daylight. Toggled via
+     a class on <body> so every existing var()-based rule repaints automatically. */
+  body.light-theme{
+    --bg: #f2eef8;
+    --bg-alt: #16132200;
+    --panel: #fdfcff;
+    --panel-edge: #d9d2ea;
+    --gold: #a9781f;
+    --gold-bright: #8a6015;
+    --red: #a83f36;
+    --green: #3f7d64;
+    --text: #2a2438;
+    --text-dim: #5c5570;
+    --text-faint: #948da8;
+    --input-bg: #ffffff;
+    --row-border: #e4dff2;
+    --text-on-gold: #fff8ec;
+    --glow1: #e6ddf5;
+    --glow2: #ede6f7;
+  }
+
+  header{
+    padding:48px 32px 28px;
+    max-width:1600px;
+    margin:0 auto;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--panel-edge);
+  }
+  .title-block h1{
+    font-family:'Cinzel',serif;
+    font-weight:600;
+    font-size:2.1rem;
+    margin:0 0 6px;
+    letter-spacing:0.02em;
+    color:var(--gold-bright);
+  }
+  .title-block p{
+    margin:0;
+    color:var(--text-dim);
+    font-size:0.92rem;
+    max-width:46ch;
+    line-height:1.5;
+  }
+  .clock{
+    text-align:right;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .clock .now{ font-size:1.4rem; color:var(--text); }
+  .clock .label{ font-size:0.72rem; color:var(--text-faint); letter-spacing:0.04em; }
+
+  .notify-btn{
+    margin-top:10px;
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:0.78rem;
+    padding:6px 12px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .notify-btn:hover{ border-color:var(--gold); color:var(--gold-bright); }
+  .notify-btn.on{ border-color:var(--green); color:var(--green); }
+  .test-sound-btn{
+    margin-top:10px;
+    margin-left:8px;
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:0.78rem;
+    padding:6px 12px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .test-sound-btn:hover{ border-color:var(--gold); color:var(--gold-bright); }
+  .mirror-stats{
+    margin-top:10px;
+    font-size:0.72rem;
+    color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .volume-control{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+    font-size:0.74rem;
+    color:var(--text-dim);
+  }
+  .volume-control input[type="range"]{
+    width:120px;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  .volume-control #volumeLabel{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text-faint);
+    min-width:2.6em;
+  }
+  .volume-control input[type="text"]{
+    width:140px;
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:5px 8px;
+    font-family:'Inter',sans-serif;
+    font-size:0.78rem;
+  }
+  .volume-control input[type="text"]:focus{ outline:none; border-color:var(--gold); }
+  .name-save-inline-btn{
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:0.72rem;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .name-save-inline-btn:hover{ border-color:var(--gold); color:var(--gold-bright); }
+
+  main{ max-width:1600px; margin:0 auto; padding:32px; }
+
+  /* Add form */
+  .add-form{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    padding:22px 24px;
+    margin-bottom:36px;
+    position:relative;
+  }
+  .add-form h2{
+    font-family:'Cinzel',serif;
+    font-size:1rem;
+    font-weight:600;
+    margin:0 0 16px;
+    color:var(--gold);
+  }
+  .add-grid{
+    display:grid;
+    grid-template-columns: 2fr 1.4fr 1fr 1fr auto;
+    gap:14px;
+    align-items:end;
+  }
+  @media (max-width:760px){ .add-grid{ grid-template-columns: 1fr 1fr; } }
+
+  /* Import from AstroDB */
+  .import-box{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    padding:22px 24px;
+    margin-bottom:20px;
+  }
+  .import-box h2{
+    font-family:'Cinzel',serif;
+    font-size:1rem;
+    font-weight:600;
+    margin:0 0 6px;
+    color:var(--gold);
+  }
+  .import-box .import-hint{
+    font-size:0.8rem;
+    color:var(--text-dim);
+    margin:0 0 14px;
+    line-height:1.5;
+    max-width:70ch;
+  }
+  .import-box textarea{
+    width:100%;
+    min-height:90px;
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.78rem;
+    resize:vertical;
+    margin-bottom:10px;
+  }
+  .import-box textarea:focus{ outline:none; border-color:var(--gold); }
+  .import-actions{ display:flex; gap:10px; align-items:center; }
+  .import-parse-btn{
+    background:var(--gold);
+    color:var(--text-on-gold);
+    border:none;
+    padding:9px 16px;
+    font-weight:600;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .import-parse-btn:hover{ background:var(--gold-bright); }
+  .import-status{ font-size:0.78rem; color:var(--text-faint); }
+  .import-status.error{ color:var(--red); }
+  .import-results{
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .import-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border:1px solid var(--panel-edge);
+    font-size:0.85rem;
+  }
+  .import-row .import-row-info{ color:var(--text); }
+  .import-row .import-row-meta{ color:var(--text-faint); font-size:0.74rem; }
+  .import-use-btn{
+    background:none;
+    border:1px solid var(--gold);
+    color:var(--gold-bright);
+    padding:5px 12px;
+    font-size:0.76rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .import-use-btn:hover{ background:var(--gold); color:var(--text-on-gold); }
+  .field label{
+    display:block;
+    font-size:0.72rem;
+    color:var(--text-faint);
+    margin-bottom:6px;
+    letter-spacing:0.02em;
+  }
+  .field input{
+    width:100%;
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:9px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:0.9rem;
+  }
+  .field input:focus{ outline:none; border-color:var(--gold); }
+  .add-btn{
+    background:var(--gold);
+    color:var(--text-on-gold);
+    border:none;
+    padding:10px 18px;
+    font-weight:600;
+    font-size:0.85rem;
+    cursor:pointer;
+    height:38px;
+    transition:background .15s;
+  }
+  .add-btn:hover{ background:var(--gold-bright); }
+
+  /* Grid of MVP cards */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:20px;
+  }
+  @media (max-width:1500px){ .grid{ grid-template-columns:repeat(4, 1fr); } }
+  @media (max-width:1200px){ .grid{ grid-template-columns:repeat(3, 1fr); } }
+  @media (max-width:900px){ .grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:600px){ .grid{ grid-template-columns:1fr; } }
+  .grid.table-mode{
+    display:block;
+  }
+  .card{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    padding:14px;
+    transition:background .3s, border-color .3s;
+  }
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    width:10px; height:10px;
+    border-top:2px solid var(--gold);
+    border-left:2px solid var(--gold);
+    top:-1px; left:-1px;
+    opacity:0.7;
+  }
+  .card::after{
+    left:auto; right:-1px; top:auto; bottom:-1px;
+    border:none;
+    border-bottom:2px solid var(--gold);
+    border-right:2px solid var(--gold);
+  }
+  .card.status-window::before, .card.status-window::after{ border-color:var(--gold-bright); }
+  .card.status-overdue::before, .card.status-overdue::after{ border-color:var(--green); }
+  .card.status-overdue-exact::before, .card.status-overdue-exact::after{ border-color:var(--red); }
+  .card.status-unknown::before, .card.status-unknown::after{ border-color:var(--text-faint); opacity:0.4;}
+  .card.status-exact::before, .card.status-exact::after{ border-color:var(--gold-bright); }
+
+  /* Pinpointed to an exact time: a calm, distinguishable gold tint — no animation, since
+     nothing urgent is happening yet. */
+  .card.status-exact{
+    background:linear-gradient(180deg, rgba(201,163,78,0.16) 0%, var(--panel) 60%);
+    border-color:var(--gold-bright);
+  }
+
+  /* Past due (window closed or pinned time passed): an actual blink between highlighted
+     and normal, not just a soft pulse — meant to be hard to miss at a glance. */
+  .card.status-overdue, .card.status-overdue-exact{
+    animation:overdue-blink 1.1s steps(1,end) infinite;
+  }
+  .card.status-overdue{
+    border-color:var(--green);
+    --pulse-rgb: 95,168,143;
+  }
+  .card.status-overdue-exact{
+    border-color:var(--red);
+    --pulse-rgb: 176,72,63;
+  }
+  @keyframes overdue-blink{
+    0%, 49%{
+      background:linear-gradient(180deg, rgba(var(--pulse-rgb),0.38) 0%, var(--panel) 70%);
+      box-shadow:0 0 0 3px rgba(var(--pulse-rgb), 0.5);
+    }
+    50%, 100%{
+      background:linear-gradient(180deg, rgba(var(--pulse-rgb),0.08) 0%, var(--panel) 60%);
+      box-shadow:0 0 0 0 rgba(var(--pulse-rgb), 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card.status-overdue, .card.status-overdue-exact{
+      animation:none;
+      background:linear-gradient(180deg, rgba(var(--pulse-rgb),0.16) 0%, var(--panel) 60%);
+    }
+  }
+  /* Blink muted by the person, per-card: same idea as the reduced-motion fallback — stays
+     visually distinguishable via color, just stops flashing. */
+  .card.status-overdue.blink-muted, .card.status-overdue-exact.blink-muted{
+    animation:none;
+    background:linear-gradient(180deg, rgba(var(--pulse-rgb),0.16) 0%, var(--panel) 60%);
+    box-shadow:none;
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:6px;
+  }
+  .card-top-left{
+    display:flex;
+    align-items:flex-start;
+    gap:5px;
+    min-width:0;
+  }
+  .card-top-left .drag-handle{ margin-top:4px; }
+  .title-block{ min-width:0; }
+  .title-row{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:5px;
+    row-gap:2px;
+  }
+  .mvp-name{
+    font-family:'Cinzel',serif;
+    font-weight:600;
+    font-size:0.94rem;
+    color:var(--text);
+    margin:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+  }
+  .mvp-map{
+    font-size:0.66rem;
+    color:var(--text-dim);
+    margin:1px 0 0;
+  }
+  .kill-attrib-inline{
+    font-size:0.6rem;
+    color:var(--text-faint);
+    white-space:nowrap;
+  }
+  .del-btn{
+    background:none; border:none; color:var(--text-faint);
+    cursor:pointer; font-size:0.92rem; line-height:1; padding:1px 3px;
+  }
+  .del-btn:hover{ color:var(--red); }
+  .edit-btn{
+    background:none; border:none; color:var(--text-faint);
+    cursor:pointer; font-size:0.72rem; line-height:1; padding:1px 3px;
+  }
+  .edit-btn:hover{ color:var(--gold-bright); }
+  .mute-blink-btn{
+    background:none; border:none; color:var(--text-faint);
+    cursor:pointer; font-size:0.72rem; line-height:1; padding:1px 3px;
+  }
+  .mute-blink-btn:hover{ color:var(--gold-bright); }
+  .card-top-actions{ display:flex; gap:1px; flex-shrink:0; }
+  .name-edit-row input{
+    width:100%;
+    background:var(--input-bg);
+    border:1px solid var(--gold);
+    color:var(--text);
+    padding:4px 6px;
+    font-family:'Cinzel',serif;
+    font-size:0.86rem;
+    margin-bottom:5px;
+  }
+  .name-edit-row input:focus{ outline:none; }
+  .name-edit-actions{ display:flex; gap:5px; margin-bottom:1px; }
+  .name-save-btn, .name-cancel-btn{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    font-weight:600;
+    padding:4px 0;
+    cursor:pointer;
+    border:1px solid var(--panel-edge);
+    background:none;
+    color:var(--text-dim);
+  }
+  .name-save-btn:hover{ border-color:var(--gold-bright); color:var(--gold-bright); }
+  .name-cancel-btn:hover{ border-color:var(--text-dim); color:var(--text); }
+
+  .status-badge{
+    display:inline-block;
+    font-size:0.58rem;
+    letter-spacing:0.03em;
+    padding:1px 6px;
+    border:1px solid var(--panel-edge);
+    color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .status-window .status-badge{ color:var(--gold-bright); border-color:var(--gold); }
+  .status-overdue .status-badge{ color:var(--green); border-color:var(--green); }
+  .status-overdue-exact .status-badge{ color:var(--red); border-color:var(--red); }
+  .status-dead .status-badge{ color:var(--red); border-color:var(--red); }
+  .status-exact .status-badge{ color:var(--gold-bright); border-color:var(--gold-bright); }
+  .pin-tag{
+    font-size:0.58rem;
+    color:var(--gold-bright);
+    letter-spacing:0.02em;
+    margin-top:3px;
+  }
+
+  .grid-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .sort-control{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.78rem;
+    color:var(--text-dim);
+  }
+  .sort-control select{
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:6px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:0.78rem;
+    cursor:pointer;
+  }
+  .sort-control select:focus{ outline:none; border-color:var(--gold); }
+
+  .drag-handle{
+    display:inline-block;
+    width:16px; height:12px;
+    cursor:grab;
+    background-image:linear-gradient(var(--text-faint) 2px, transparent 2px);
+    background-size:100% 5px;
+    background-repeat:repeat-y;
+    background-position:top;
+    opacity:0.55;
+    flex-shrink:0;
+  }
+  .drag-handle:hover{ opacity:0.9; }
+  .card.dragging{ opacity:0.35; }
+  .card.drag-over{ outline:2px dashed var(--gold-bright); outline-offset:-2px; }
+
+  .collapse-all-btn{
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.74rem;
+    padding:6px 12px;
+    cursor:pointer;
+  }
+  .collapse-all-btn:hover{ border-color:var(--gold); color:var(--gold-bright); }
+
+  .table-columns{
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+  }
+  .table-columns .mvp-table{ flex:1; min-width:0; }
+
+  .mvp-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .mvp-table thead th{
+    text-align:left;
+    padding:5px 7px;
+    font-size:0.6rem;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    color:var(--text-faint);
+    border-bottom:1px solid var(--panel-edge);
+  }
+  .mvp-table tbody tr.table-row{
+    cursor:pointer;
+    border-bottom:1px solid var(--row-border);
+    border-left:3px solid var(--panel-edge);
+    transition:background-color .15s;
+  }
+  .mvp-table tbody tr.table-row:hover{ background:rgba(201,163,78,0.06); }
+  .mvp-table tbody tr.table-row.expanded{ background:rgba(201,163,78,0.09); }
+  .table-row.status-window{ border-left-color:var(--gold-bright); }
+  .table-row.status-overdue{ border-left-color:var(--green); }
+  .table-row.status-overdue-exact{ border-left-color:var(--red); }
+  .table-row.status-exact{ border-left-color:var(--gold-bright); }
+  .table-row.status-dead{ border-left-color:var(--red); }
+  .table-row.status-unknown{ border-left-color:var(--text-faint); opacity:0.6; }
+  .mvp-table td{
+    padding:5px 7px;
+    font-size:0.72rem;
+    color:var(--text-dim);
+    vertical-align:middle;
+    line-height:1.25;
+  }
+  .table-chevron{ width:14px; color:var(--text-faint); font-size:0.6rem; }
+  .table-name{ font-family:'Cinzel',serif; font-weight:600; font-size:0.78rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+  .table-cell-when{ white-space:nowrap; }
+  .table-cell-countdown{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:0.72rem; }
+  .status-window .table-cell-countdown{ color:var(--gold-bright); }
+  .status-overdue .table-cell-countdown{ color:var(--green); }
+  .status-overdue-exact .table-cell-countdown{ color:var(--red); }
+  .status-exact .table-cell-countdown{ color:var(--gold-bright); }
+  .table-cell-abs{ font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text-faint); }
+  .table-cell-lastkill{ font-size:0.68rem; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px; }
+  .table-expand-row td{ padding:12px; background:var(--bg); }
+  .table-expand-row .card{ max-width:100%; }
+  @media (max-width:900px){
+    .table-columns{ flex-direction:column; }
+  }
+  @media (max-width:480px){
+    .mvp-table{ font-size:0.68rem; }
+    .table-cell-lastkill{ display:none; }
+  }
+
+  .countdown-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin:5px 0 1px;
+    gap:8px;
+  }
+  .countdown{
+    font-family:'JetBrains Mono',monospace;
+    font-size:1.3rem;
+    color:var(--text);
+  }
+  .status-window .countdown{ color:var(--gold-bright); }
+  .status-overdue .countdown{ color:var(--green); }
+  .status-overdue-exact .countdown{ color:var(--red); }
+  .status-exact .countdown{ color:var(--gold-bright); }
+  .countdown-abs{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.68rem;
+    color:var(--text-faint);
+    white-space:nowrap;
+  }
+  .countdown-label{ font-size:0.6rem; color:var(--text-faint); }
+
+  .bar{
+    height:3px;
+    background:var(--input-bg);
+    margin:6px 0 2px;
+    position:relative;
+    overflow:hidden;
+    border:1px solid var(--panel-edge);
+  }
+  .bar-fill{
+    position:absolute; left:0; top:0; bottom:0;
+    background:var(--red);
+    width:0%;
+    transition:width .4s linear;
+  }
+  .status-window .bar-fill{ background:var(--gold); }
+  .status-overdue .bar-fill{ background:var(--green); width:100% !important; }
+  .status-overdue-exact .bar-fill{ background:var(--red); width:100% !important; }
+  .status-exact .bar-fill{ background:var(--gold-bright); }
+
+  .bar-labels{
+    display:flex; justify-content:space-between;
+    font-size:0.6rem; color:var(--text-faint);
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .card-actions{
+    display:flex; gap:6px; margin-top:10px;
+  }
+  .log-btn, .reset-btn{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.72rem;
+    font-weight:600;
+    padding:6px 4px;
+    cursor:pointer;
+    border:1px solid var(--panel-edge);
+    background:none;
+    color:var(--text-dim);
+    transition:all .15s;
+    text-align:center;
+  }
+  .reset-btn:hover{ border-color:var(--text-dim); color:var(--text); }
+  .log-btn:hover{ border-color:var(--gold-bright); color:var(--gold-bright); }
+  .log-btn.active{ border-color:var(--gold-bright); color:var(--gold-bright); }
+
+  .pin-tag .pin-clear-link{
+    background:none;
+    border:none;
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.6rem;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+    margin-left:4px;
+  }
+  .pin-tag .pin-clear-link:hover{ color:var(--red); }
+
+  .pin-form{
+    margin-top:8px;
+    padding:10px;
+    border:1px solid var(--panel-edge);
+    background:var(--input-bg);
+  }
+  .pin-form label{
+    display:block;
+    font-size:0.62rem;
+    color:var(--text-faint);
+    margin-bottom:4px;
+  }
+  .pin-form input{
+    width:100%;
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:6px 7px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.76rem;
+    margin-bottom:7px;
+  }
+  .pin-form input:focus{ outline:none; border-color:var(--gold); }
+
+  .log-tabs{ display:flex; gap:5px; margin-bottom:8px; }
+  .mirror-check{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.68rem;
+    color:var(--text-dim);
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .mirror-check input{
+    width:auto;
+    margin:0;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  .log-tab{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    font-weight:600;
+    padding:5px 4px;
+    cursor:pointer;
+    border:1px solid var(--panel-edge);
+    background:none;
+    color:var(--text-faint);
+  }
+  .log-tab:hover{ color:var(--text); }
+  .log-tab.active{ border-color:var(--gold); color:var(--gold-bright); background:rgba(201,163,78,0.08); }
+
+  .log-form-cancel{
+    display:block;
+    width:100%;
+    margin-top:6px;
+    background:none;
+    border:none;
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    text-decoration:underline;
+    cursor:pointer;
+    text-align:center;
+    padding:2px 0;
+  }
+  .log-form-cancel:hover{ color:var(--red); }
+
+  .pin-form-actions{ display:flex; gap:6px; }
+  .pin-set-btn{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.7rem;
+    font-weight:600;
+    padding:5px 0;
+    cursor:pointer;
+    border:1px solid var(--panel-edge);
+    background:none;
+    color:var(--text-dim);
+  }
+  .pin-set-btn:hover{ border-color:var(--gold-bright); color:var(--gold-bright); }
+
+  .killlog-form-actions{ display:flex; gap:5px; flex-wrap:wrap; }
+  .killlog-mine-btn, .killlog-other-btn{
+    flex:1;
+    min-width:76px;
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    font-weight:600;
+    padding:5px 4px;
+    cursor:pointer;
+    border:1px solid var(--panel-edge);
+    background:none;
+    color:var(--text-dim);
+  }
+  .killlog-mine-btn:hover{ border-color:var(--gold-bright); color:var(--gold-bright); }
+  .killlog-other-btn:hover{ border-color:var(--text-dim); color:var(--text); }
+  .killlog-mode-switch, .pin-mode-switch{
+    background:none;
+    border:none;
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.62rem;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0 0 6px;
+    display:block;
+  }
+  .killlog-mode-switch:hover, .pin-mode-switch:hover{ color:var(--gold-bright); }
+  .killlog-gmt-preview, .pin-clock-preview{
+    font-size:0.64rem;
+    color:var(--gold-bright);
+    margin:-2px 0 6px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .pin-hm-row{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    margin-bottom:7px;
+  }
+  .pin-hm-row input{
+    width:56px;
+    flex:none;
+    margin-bottom:0;
+  }
+  .pin-hm-sep{
+    font-size:0.68rem;
+    color:var(--text-faint);
+  }
+
+  .details-toggle-btn{
+    display:block;
+    width:100%;
+    margin-top:6px;
+    background:none;
+    border:none;
+    border-top:1px dashed var(--panel-edge);
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    padding:6px 0 0;
+    cursor:pointer;
+    text-align:left;
+  }
+  .details-toggle-btn:hover, .details-toggle-btn.active{ color:var(--gold-bright); }
+  .details-panel{ margin-top:5px; }
+  .details-subhead{
+    font-size:0.6rem;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin:8px 0 3px;
+  }
+  .details-panel > .kill-stats{ margin-top:0; }
+
+  .future-list{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.7rem;
+  }
+  .future-row{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    padding:3px 0;
+    color:var(--text-dim);
+    border-top:1px solid var(--row-border);
+  }
+  .future-row .n{ color:var(--text-faint); }
+
+  .kill-stats{
+    font-size:0.68rem;
+    color:var(--text-dim);
+    margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .kill-stats b{ color:var(--gold-bright); font-weight:600; }
+  .history-list{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.7rem;
+  }
+  .history-row{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    padding:2px 0;
+    color:var(--text-dim);
+    border-top:1px solid var(--row-border);
+  }
+  .history-row.today{ color:var(--gold-bright); }
+
+  .recent-kills-list{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.68rem;
+  }
+  .recent-kill-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+    padding:3px 0;
+    color:var(--text-dim);
+    border-top:1px solid var(--row-border);
+  }
+  .recent-kill-row-main{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex:1;
+    cursor:pointer;
+  }
+  .recent-kill-edit-link{
+    background:none;
+    border:none;
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.6rem;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .recent-kill-edit-link:hover{ color:var(--gold-bright); }
+  .recent-kill-edit-row{
+    margin-top:4px;
+    margin-bottom:4px;
+  }
+  .recent-kill-mirror{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.64rem;
+  }
+  .recent-kill-mirror input{
+    width:auto;
+    margin:0;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+
+  .empty{
+    text-align:center;
+    color:var(--text-faint);
+    padding:60px 20px;
+    font-size:0.9rem;
+    border:1px dashed var(--panel-edge);
+  }
+
+  footer{
+    max-width:1600px; margin:40px auto 0; padding:0 32px;
+    font-size:0.76rem; color:var(--text-faint); line-height:1.6;
+  }
+  .auth-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:6px;
+  }
+  .auth-btn{
+    background:var(--gold);
+    color:var(--text-on-gold);
+    border:none;
+    padding:9px 16px;
+    font-weight:600;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .auth-btn:hover{ background:var(--gold-bright); }
+  .auth-signed-in{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.8rem;
+    color:var(--text-dim);
+  }
+  .auth-signed-in b{ color:var(--gold-bright); }
+  .auth-signout-btn{
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-faint);
+    font-family:'Inter',sans-serif;
+    font-size:0.74rem;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .auth-signout-btn:hover{ border-color:var(--red); color:var(--red); }
+  .auth-password-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
+  }
+  .auth-or{
+    font-size:0.72rem;
+    color:var(--text-faint);
+    font-style:italic;
+  }
+  .auth-password-bar input{
+    background:var(--input-bg);
+    border:1px solid var(--panel-edge);
+    color:var(--text);
+    padding:6px 9px;
+    font-family:'Inter',sans-serif;
+    font-size:0.78rem;
+    width:130px;
+  }
+  .auth-password-bar input:focus{ outline:none; border-color:var(--gold); }
+  .auth-status{
+    font-size:0.72rem;
+    color:var(--text-faint);
+    margin-top:4px;
+  }
+  .presence-indicator{
+    font-size:0.72rem;
+    color:var(--green);
+    margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .auth-gate-message{
+    max-width:1600px;
+    margin:60px auto;
+    padding:0 32px;
+    text-align:center;
+    color:var(--text-dim);
+  }
+  .auth-gate-message p{ max-width:50ch; margin:10px auto 20px; line-height:1.6; }
+</style>
+<link id="dynFavicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAOfElEQVR4AcxaCXBW1RU+92VjFRBRRIrYuoGiMCIuQAhFSEiAJAjSVnBc6tJq1Q52EC122oqMdWkHO21Ra62KY0FCgoQsjpCFRRGUikqnWtSKyFYsAZOY5H+359x37333vXffn/+PcaZv7nLOd75zzr3nrfnBgf/jg3Vpbel5dXsB4tLH4cn2yJUxLWftpbyTzt1eAFv6dfkTi8umTXqoPH/SM+XTctevLcjdvrZg0sdrC3KbvS7k7eX5uevLkbM2f9JD5CNWTpu3BRXGrz90XwFooXI964smDFhbMHF+ecGk1biZ4y5zypkDi4HBDeCwIgbsUgZwJgPW0+tCvhQYKwLkMAaLOfqQLxZkdcW03GsppgzvT8wXU5ZCPk7Kjp0R8SxVTM8dU16QW92RyDjKwHkeAObgZvrgnHbDcCB953CHvUAxsRhVFVPzxupgRNJKMsHYdcgn9QIYMcKpKvInn12OZ5u7sBOA5cM3dTAo4I67HXOtKpsy4dykaXC92CTF27WvSxin1AvgxUAXv627avwwPCtPcnD3IDoHT5ktB5rSaww4xAZijExzncyM9/D5saJi6vgh1ugcMIqykIupKxwg9QJoHyakivyJRW5mxm5c6c3YMwUYO+BqQjYvSgiUKseAXMqxE4NMBuwWnpGxp6Igd1YsrxNDFwrAoTx/0gMc2CsA7CRI6WARFpdI1CINKU/sJI5LwrfL/fEuKluU4RUgxVVsysvrUZ6f+xKeoF8CY3YvOxrNLBFvad4oITHZw4R4isQYA4c9iM+GF1ZdcUVPkIcyS9U6eQUIxbUxKwvzBv83h7+OG59ns2sshViaqwVaKjlS90Bf8nRvJJ4niTFKuja7X9aWNfkTTyd71ExosHsFCGIRjc58e4JXYZ0vjhhDQGiJISup9mUxYGjEjk2IngYBGYyDeOIxF47HxmQwVklrNtixYkoFONaDPwcMRtPTGfAQucWASqiFlxMyo2p31H4kUEemmMQQeoJTCIGTgMRIY2OO5bjPRmABBH06LUB5Qe696DeXlsCxCiiLunsDael2nq6D5uulB0J4qDdqKgBj8+TaIXgEnCFpAcqnTZyD9KVecG8MBgtryA5ApFM3wVTimHxfDkfyLXYJ+Usr8icUAJg5TRniC1Axfnxf7rA/MGAOBoLUDhaikU49BH9janClTKw949kN08fp1zVdyWb62CuA98m4HwMMMsm+HEzk46YUz2EmrZtkL5slMoPT2tyc++LSWAtAn7jA2N1xTgAMOj/sHEI5DZ0H0Iw06drPF9hdZdOuPNXXfSlQAJUokZnxK6TkYO/ehgnEmRJDaqHRRTxvafY9bAFsmPRwoIfjZNKeJOBPgQJQiLKrckcAsPnwNY8JjyyH4qo63a9c9lj49otkOOXiMZD//Grps0nMs2QMNXsx64WN5O+uUG+7YIkCwXFjHNgPy6blXRjAUQkUAHVwMuG3GCqD5K72c675AfQ/5zzcMLeHwAQ2Q6/TBkNmb/nzQbr3iS2ggWHKDMdxHzUgIQYKIJ78AJNx5cKY8oDRFXfw5ePhrJmlkJGDdxAzDIpAc0xdeg8eAk6m/MMyxpXcu9ox7eQN0y8z3ggAfgEYhu3r0M9V2QCkQOoHRiby8KJiGH3XPdDzFPnykDjZUuk9Bw0CJysrFarBSSGJ3A4Dlt3OswvB2J/DQB4Yh3NWIjXrxEIo6dR74IbH3rsERt1yO+T0H+CzyOhrWtKwFjxT7yFDPSGtMRTE5ot7U7ALDD+MEJBuwY8cBtMVMTKjA7oF4Bzc+MibboO8J56EMyZNASc7zbNnBOx9xtBg8TBT00d7oWJ6XtK+8dbrkZl6YxymCrbMrW+BddPzLodkP3BIBzCO8+dfD2fP+Z6xcKwS2V2XxmA3/A3R46Bb36HDILNXL0+XY+vR/0ipGyfGhnh79WLqAiTcBBbAAzsbcb12Cudw7F8fwGeNm6L2WCekYkV6nnoaZPbQv2Xgc5hD88EDaOxai02HBnOvugDA2fD4VLhCwxjUPEP7ieOwd91a2PyzO6GjtRU34OGpjn2/NQwysvH5Sw6YwO3ogL7DzoT8lWtgVuVr4r0/c10tTHnqOTj3+wsgs6dRLPIJdQ4YJIQJFU8SAzZYyDjIAiDEQIOIhxoL6VJ1ObQcPoQbL4ONP7oJdv9pOXS0tHjGGBfPGB17DsIvVUcvB+h1OPDCi6DHyQOBOd5niZOVDX3wVhmx4EYYv+xxGHD+SAgcKeXEXzXkXokuM2K9CCQkEDG5smv5o1B73TWw+4/LofXIoeRkbbWfGf3qVDyWZDFo63/eCBh950JxlZCLYOvQJAgETSTjFGziaieLLADgmxEvC0LAP1QIjUQAbfGFACcUULACBIEMvGAUZJuvT4F2Ppw0/Nsw8oZbBTGYycxhyoLq7dUTQRcAb43ILRAMih4RALFwC3DwcgvbLTpd/lmhe9pt74ADWxthy6K7oXL2dHF7NX++P+iNV8LAC0fB0LwpQdzQbKK5V10AG7E7sGj9o1HbTpyAo3vegxP7PoWO5mZIfPUVfLjmJXjj10vgyDu7oKOlGfZWlMGO3zwIzQc+DwTIwr8dBo2+JIClo+gCYDG7/s5JOSMHvP4gfBza8QZsW7IIXrt5AVReXQjrS/Jhz1+f1jQmnb74x/twaOd2APM7Axfea/DpHpd5kz9iPl/RErroveoC4GNQg5qJQiQmYl1vGM2+pqQhTRf6OHITHQF+zgD5+W0SBQPzYRMiDko096oLgJ+I1gJEYmKg2KYyxBLQkAInGaX5wAGg5wNGSq0ZG1CiuVddADRiAXA0wiZbiEHzxaC7j5uShTPqtp9A3u+fhqnPvAhFazZAUXk1jLjuJtNLy73xbwbH/IsR4/GE/PTWC0ZQeKhZKHpAFPfqqbIADLz7gnmoHJHoSUHYw4wxaNZeBkOJdht93PT7ztnQ6/Qh4u8B+i2BdOVlzj0HniI+kjSGyZsPeg9GPLMSRlBIahaKHry9eqosAAfG3V0ehKOMpN05Ykla0Ox5BTHl7NmUpuamj/cCTySUijODk0eOguGFwX/1PnXsZTDokkuBzhbIw21rwzfI+0LTOe1pBIcGpvaKPFkAgDOOtLyG78djiAHIn6N0QPJKs4s4Nh+L4fCut6Ct6ViAndWnj7gN1Hf/WTOK4eIf3+X/2CLZzYcOwP4t9VKTU9KF8ybaq2AiTxdg7M6d7fjZUo2YsH1Tg7y4AuHpNXhw++vAXfMqAMju108UoaisCi66/afiFlGOtE76Xvj3q9Xw5Wf7FJx0FrXnUEV7VURdAAIY4+U0f/0uUlnDcCsKsHvFE3Dk72/j1RfHCDlisfY31sEHq14MGeJVihzeY6AAWaxtA74j2+JD+Jb4LRKHUtGceu9obYG3Hn8YDu7YDsHnQTQGnfmPXqmAtx5bFjUmQcTejruVJiVQgMKqN5pwY5ZfM0wXT05/i56fP4YioNp65DC8/sAieBsLcfT9d6H9yxP6iqDbg54T+zfXCw796Q24WBXPEBUUmZGzqXjLluOmIVAAMriucw8SSTQ6rs7QOhN3/e6RyO94WxcvNNeLIaJZEMTG4dONtdC48A7YMGcGVBROFrHWFU2BqnnF8ObSX4i/D0QwY1mGiDHszeGJhWFLpACza+ve5Zz/TSTQ7LjFakK8YLjKl0uUa3AAX9JRggUJ79iMYaED7mlWzdb3wqZIAYjAmXMvvhITJHfaYxJr2FwoydoAoERGOMjDlCVkm5SvtiXz49CaldGxCO8nTVeCtQCl1XUf4yvR/3NMsW1zTOIYOLAGxVEzhY9sjECzS4LpY5ptMj78VhRt2PqJzWYpgJfBdTseAKyczSkpxpJaOzUGNmaLpQg2G0aPwrwpx+FL0RRpxI0WQF6Ps2u3HuKM36G8iKzkpLNaYFIS6Msfkh0pxjJDhF1w3TcUVjUeNjlKJq4sANJMVMql1Q1/xofHw6QSmeZ0O0WmHrj2MYiO5xkRSbPpAEn8OH+4uLqhLMjwE5IkC0DRSA1SSSuuaViM82rs0WZ3CfAoMnUWd87JKDy0ILS0Bxb0wDfZGrn2oAHvawVQRlkAgkilOdgxLu/Xyq5Dv11BC2p2FzREW+dUzBR1CyE8roxh3jv9v3LmY0QeMkRUowARG6hsk+vqWhMOm4m3w6fQDQcurItR8N2EZ8LqjFuluDjty2hrL6Q1W3khMFoAiqJIGE2JV1fV7Wtraqf/9rFSFUbZ4mYzlMkxwppwimGZncfoKcNXth9rO3fmxm2fBQInUaIFiFsdBpm3bVtLSXXDfEjwn+PVkISJZGyxX35oizSxgQhqBSKJ8YbHtoTWdg2u0eoUA+oCYP4Yig+rxCW1DUvxi7UEa97sWy2ScrCYIlA6XOUsFs2baC34xnpQwenMjrqeUsvPBJ1hBny9rGOJxDl4V67A27KDMIRTaoobnlNyViQOHeDCUwnOz6e1iIV5g2Ikn2VyBxefnBiw4kcl6qpYxa9u2Y/Jb3M7Ehe4nK9K5bZAd51SxVEz2TrteK0j52XG2YiSmvpbrq5p9H4RFUHEgOZQk5sNoJLqBEBDsfnYMHKZvXHzP0trGuYx1xmHu6smDG8Pb+resYY5cElJdf3c4tq6D3XouIUpgtysUs05tgA2HxsmgklD8at1O0pq6qdnZiROZi7MR9vL+Fcl/qqBUhea9H2ZQ2IBxcSNFxRXNeDvZn4wsXeZ30dDkiCFMKnGFkDauzTNqNz8RXFtw0pc8NzSmvq+DndLuAvL8Or4C94mlXgjvYlr/gTnFq8DyW+Cyys9jvsQXkFF5CtiVG9+gWKC5R7HONDpkYTUjQVgluXh0hjArJrGitLa+vvw6rixpLZxRml1w7jS6vrhOPfyupDHldQ2zBCcmsb7S6obNqB3qNl3gilCvNTVtAugkqnZT4Xn0ld8KbxmvK59YydSNEnEIQik7QD/AwAA//9vF08LAAAABklEQVQDAKuiX8K+vZ5jAAAAAElFTkSuQmCC"></head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>MVP Watch</h1>
+    <p>Mark an MVP as killed and this tracks the respawn window against your server's min/max spawn time, with a spoken voice alert 3 minutes and 1 minute before it may spawn. Timers are shared live with your group.</p>
+    <div class="auth-bar">
+      <button class="auth-btn" id="signInBtn">Sign in with Google</button>
+      <div class="auth-signed-in" id="signedInBar" style="display:none;">
+        Signed in as <b id="signedInName"></b>
+        <button class="auth-signout-btn" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+    <div class="auth-password-bar" id="passwordAuthBar">
+      <span class="auth-or">or</span>
+      <input type="text" id="loginEmailInput" placeholder="username" autocomplete="username">
+      <input type="password" id="loginPasswordInput" placeholder="password" autocomplete="current-password">
+      <button class="auth-signout-btn" id="passwordSignInBtn">Sign in</button>
+    </div>
+    <div class="auth-status" id="authStatus"></div>
+    <div class="presence-indicator" id="presenceIndicator"></div>
+  </div>
+  <div class="clock">
+    <div class="now" id="clockNow">2:18:54 PM</div>
+    <div class="label">LOCAL TIME</div>
+  </div>
+</header>
+
+<div class="auth-gate-message" id="authGateMessage">
+  <h2 style="font-family:&#39;Cinzel&#39;,serif;color:var(--gold-bright);">Sign in to use the shared tracker</h2>
+  <p>MVP timers are shared live with your group — sign in with Google above to see them and start tracking.</p>
+</div>
+
+<div id="appRoot" style="display:none;">
+<header>
+  <div class="title-block">
+    <button class="notify-btn" id="notifyBtn">Enable notifications</button>
+    <button class="test-sound-btn" id="testSound3Btn">Test 3-min voice alert</button>
+    <button class="test-sound-btn" id="testSound1Btn">Test 1-min voice alert</button>
+    <button class="test-sound-btn" id="exportBtn">Export data</button>
+    <button class="test-sound-btn" id="importBtn">Import data</button>
+    <button class="test-sound-btn" id="themeToggleBtn">Light mode</button>
+    <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+    <div class="volume-control">
+      <label for="volumeSlider">Alert volume</label>
+      <input type="range" id="volumeSlider" min="0" max="100" value="80">
+      <span id="volumeLabel">80%</span>
+    </div>
+    <div class="mirror-stats" id="killStats">Your kills — today: 0 · all-time: 0</div>
+    <div class="mirror-stats" id="mirrorStats">Convex Mirrors — today: 0 · all-time: 0</div>
+  </div>
+</header>
+
+<main>
+  <div class="add-form">
+    <h2>Add MVP</h2>
+    <div class="add-grid">
+      <div class="field">
+        <label for="f-name">MVP name</label>
+        <input id="f-name" type="text" placeholder="e.g. Amon Ra">
+      </div>
+      <div class="field">
+        <label for="f-map">Map / location (optional)</label>
+        <input id="f-map" type="text" placeholder="e.g. moc_pryd06">
+      </div>
+      <div class="field">
+        <label for="f-min">Min respawn (min)</label>
+        <input id="f-min" type="number" min="0" placeholder="60">
+      </div>
+      <div class="field">
+        <label for="f-max">Max respawn (min)</label>
+        <input id="f-max" type="number" min="0" placeholder="120">
+      </div>
+      <button class="add-btn" id="addBtn">Add</button>
+    </div>
+  </div>
+
+  <div class="grid-toolbar">
+    <div class="sort-control">
+      <label for="sortModeSelect">Sort:</label>
+      <select id="sortModeSelect">
+        <option value="urgency">Soonest to spawn</option>
+        <option value="manual">My custom order (drag to arrange)</option>
+      </select>
+    </div>
+    <div class="sort-control">
+      <label for="viewModeSelect">View:</label>
+      <select id="viewModeSelect">
+        <option value="tiles">Tiles</option>
+        <option value="table">Table</option>
+      </select>
+    </div>
+    <button class="collapse-all-btn" id="collapseAllBtn">Collapse all details</button>
+  </div>
+  <div class="grid" id="grid"><div class="card status-overdue blink-muted" data-id="mtjinn055p4qi" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Ominous Turtle General</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Unmute blink">🔕</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">53:09:40</span>
+          <span class="countdown-abs">Sep 3, 9:09 AM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>120m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjae8he996ob" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Luanda</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Someone else</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">44:39:54</span>
+          <span class="countdown-abs">Sep 3, 5:39 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>120m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue-exact" data-id="mtjbnx2hihekn" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Jortus Easy</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        <div class="pin-tag">Pinned to 9/3/2026, 6:04:44 PM <button class="pin-clear-link" data-action="clearpin">(clear)</button></div>
+        <div class="countdown-row">
+          <span class="countdown">44:14:09</span>
+          <span class="countdown-abs">Sep 3, 6:04 PM</span>
+        </div>
+        <div class="countdown-label">past pinned spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>330m</span><span>360m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjl6ee1sl3b5" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Turtle general</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Gregorio Sandoval</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">44:09:45</span>
+          <span class="countdown-abs">Sep 3, 6:09 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>60m</span><span>60m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue-exact" data-id="mtja2eegznwxf" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Pharoah</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Gregorio Sandoval</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        <div class="pin-tag">Pinned to 9/3/2026, 6:25:33 PM <button class="pin-clear-link" data-action="clearpin">(clear)</button></div>
+        <div class="countdown-row">
+          <span class="countdown">43:53:20</span>
+          <span class="countdown-abs">Sep 3, 6:25 PM</span>
+        </div>
+        <div class="countdown-label">past pinned spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>60m</span><span>65m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjbthdssty91" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Corrupted Spider Queen</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Someone else</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:41:22</span>
+          <span class="countdown-abs">Sep 3, 6:37 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>130m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjl0hhxbpxsu" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">SnowStorm Angel / Cleaner</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:50:43</span>
+          <span class="countdown-abs">Sep 3, 6:28 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>120m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue-exact" data-id="mtjidv1llezxx" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Ultra Limacina</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        <div class="pin-tag">Pinned to 9/3/2026, 6:28:28 PM <button class="pin-clear-link" data-action="clearpin">(clear)</button></div>
+        <div class="countdown-row">
+          <span class="countdown">43:50:25</span>
+          <span class="countdown-abs">Sep 3, 6:28 PM</span>
+        </div>
+        <div class="countdown-label">past pinned spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>130m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjijiv940yz9" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Deep Sea Witch</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:50:12</span>
+          <span class="countdown-abs">Sep 3, 6:28 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>120m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtkd2ja4g3cxg" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Vesper</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:47:10</span>
+          <span class="countdown-abs">Sep 3, 6:31 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>120m</span><span>120m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtja55rbcv44k" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">GTB</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by test1</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:30:30</span>
+          <span class="countdown-abs">Sep 3, 6:48 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>60m</span><span>70m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtja4bkkucf6a" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">LotD</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Someone else</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:35:28</span>
+          <span class="countdown-abs">Sep 3, 6:43 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>133m</span><span>133m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjbo3to7r6bs" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Jortus Hard</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Anonymous</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">43:01:30</span>
+          <span class="countdown-abs">Sep 3, 7:17 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>330m</span><span>360m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjbuejr1dxpv" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Icehorn</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Someone else</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">41:51:26</span>
+          <span class="countdown-abs">Sep 3, 8:27 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>210m</span><span>240m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div><div class="card status-overdue" data-id="mtjbv00l58eg9" draggable="false">
+        
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">Death Witch</span>
+                <span class="status-badge">SHOULD BE UP</span>
+                <span class="kill-attrib-inline">by Gregorio Sandoval</span>
+              </div>
+              
+            </div>
+          </div>
+          <div class="card-top-actions">
+            <button class="mute-blink-btn" data-action="toggleblinkmute" title="Mute blink">🔔</button>
+            <button class="edit-btn" data-action="editname" title="Rename">✎</button>
+            <button class="del-btn" data-action="delete" title="Remove">×</button>
+          </div>
+        </div>
+        
+        <div class="countdown-row">
+          <span class="countdown">38:45:49</span>
+          <span class="countdown-abs">Sep 3, 11:33 PM</span>
+        </div>
+        <div class="countdown-label">past latest spawn time</div>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <div class="bar-labels"><span>330m</span><span>360m</span></div>
+        <div class="card-actions">
+          <button class="log-btn " data-action="openlog">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        
+        <button class="details-toggle-btn " data-action="opendetails">Details</button>
+        
+      </div></div>
+  <div class="empty" id="emptyMsg" style="display:none;">No MVPs added yet. Add one above to start tracking.</div>
+
+  <div class="import-box">
+    <h2>Import from AstroDB</h2>
+    <p class="import-hint">Two ways to feed this: (1) paste the raw JSON response from a <code>/api/...</code> request in DevTools — gives you name/map only. Or (2) go to a monster's detail page on <code>db.astrorpg.com</code>, select all the page text (Ctrl/Cmd+A) and copy it — this also pulls the "Spawn Maps" respawn times, one option per map. No live connection to their site either way.</p>
+    <textarea id="importInput" placeholder="Paste JSON here, e.g. {&quot;monsters&quot;:[{&quot;name&quot;:&quot;Baphomet&quot;,&quot;aegis_name&quot;:&quot;BAPHOMET&quot;,...}]}"></textarea>
+    <div class="import-actions">
+      <button class="import-parse-btn" id="importParseBtn">Parse</button>
+      <span class="import-status" id="importStatus"></span>
+    </div>
+    <div class="import-results" id="importResults"></div>
+  </div>
+</main>
+</div>
+
+<footer>
+  Shared MVP timers sync live to everyone signed in through the group's Firestore database. Convex Mirror usage, alert volume, theme, and sort preference stay local to this device only — not shared.
+</footer>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'mvpwatch.mvps.v1';
+  const SORT_MODE_KEY = 'mvpwatch.sortmode.v1';
+  const VIEW_MODE_KEY = 'mvpwatch.viewmode.v1';
+  const MIRROR_LOG_KEY = 'mvpwatch.mirrorlog.v1';
+  const VOLUME_KEY = 'mvpwatch.volume.v1';
+  const THEME_KEY = 'mvpwatch.theme.v1';
+  const KILL_COUNT_KEY = 'mvpwatch.killcount.v1';
+  const USERNAME_KEY = 'mvpwatch.username.v1';
+  let mvps = [];
+  let mirrorLog = []; // timestamps of every "used a Convex Mirror" submission — local to THIS device/
+                       // person only, deliberately never synced, so each person's count stays their own.
+  let globalKillCount = 0; // never-trimmed running total of every kill YOU logged, across all MVPs —
+                            // separate from each mvp's killLog (which trims to 8 days for the recent-
+                            // history display), so "all-time" is actually all-time.
+  let sortMode = 'urgency'; // 'urgency' (soonest to spawn) or 'manual' (drag-arranged order)
+  let viewMode = 'tiles'; // 'tiles' or 'table'
+  let expandedTableRows = new Set(); // ids of MVPs currently expanded in table view
+  let alertVolume = 0.8; // 0–1, applied to both the spoken alert and the fallback tones
+  let theme = 'dark'; // 'dark' or 'light'
+  let username = ''; // this device/person's display name, set once, used to attribute kills
+  let fbApp = null, fbAuth = null, fbDb = null, fbUser = null, fbUnsub = null;
+  let applyingRemoteUpdate = false; // true while a Firestore snapshot is being applied locally,
+                                     // so save() doesn't immediately write it right back up
+  let cachedFemaleVoice = null;
+  let draggedId = null;
+  let notifyEnabled = false;
+  let audioCtx = null;
+  let openLogForms = new Set(); // ids of cards currently showing the unified "log a kill" form
+  let logCategory = new Map(); // id -> 'died' | 'respawn', which tab the log form is on
+  let mirrorDrafts = new Set(); // ids where the "used a Convex Mirror" checkbox is currently checked
+  let pinDrafts = new Map(); // id -> in-progress "minutes from now" string for the respawn tab
+  let pinHDrafts = new Map(); // id -> in-progress hours string for the H/M respawn duration mode
+  let pinMDrafts = new Map(); // id -> in-progress minutes string for the H/M respawn duration mode
+  let pinKillTimeDrafts = new Map(); // id -> in-progress "HH:MM" GMT kill-time string
+  let editingRecentKill = new Set(); // ids of cards currently editing their most-recent kill's time
+  let recentKillEditDrafts = new Map(); // id -> in-progress "HH:MM" GMT string for that edit
+  let pinMode = new Map(); // id -> 'killtime' | 'minutes' | 'hm', which input mode the respawn tab is showing
+  let killLogDrafts = new Map(); // id -> in-progress "minutes ago" string for the died tab
+  let killLogGmtDrafts = new Map(); // id -> in-progress "HH:MM" GMT string for the died tab
+  let killLogMode = new Map(); // id -> 'ago' | 'gmt', which input mode the died tab is showing
+  let openDetails = new Set(); // ids of cards currently showing the combined details panel
+  let editingNames = new Set(); // ids of cards currently showing the name-edit input
+
+  function toLocalDatetimeValue(ts){
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function normalizeMvps(arr){
+    if(!Array.isArray(arr)) return [];
+    arr.forEach((mvp, i) => {
+      if(!mvp.killLog) mvp.killLog = [];
+      // Migrate old killLog entries (plain timestamp numbers) to {ts, mirror} objects.
+      mvp.killLog = mvp.killLog.map(e => typeof e === 'number' ? { ts: e, mirror: false } : e);
+      if(mvp.notified3Min === undefined) mvp.notified3Min = false;
+      if(mvp.notified1Min === undefined) mvp.notified1Min = false;
+      // Migrate old binary 'me'/'other' attribution to named-person attribution.
+      if(mvp.lastKillBy === 'me') mvp.lastKillBy = username || 'Anonymous';
+      else if(mvp.lastKillBy === 'other') mvp.lastKillBy = 'Someone else';
+      else if(mvp.lastKillBy === undefined) mvp.lastKillBy = null;
+      if(mvp.blinkMuted === undefined) mvp.blinkMuted = false;
+      // Never-trimmed per-MVP all-time kill count. Backfilled from whatever's left in
+      // killLog on first migration (that array trims to 8 days, so this is a best-effort
+      // starting point for existing data — every kill logged from here on is exact).
+      if(mvp.totalKills === undefined) mvp.totalKills = mvp.killLog.length;
+      if(mvp.order === undefined) mvp.order = i;
+    });
+    return arr;
+  }
+
+  function load(){
+    try{
+      const rawName = localStorage.getItem(USERNAME_KEY);
+      if(rawName) username = rawName;
+    }catch(e){}
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      mvps = raw ? normalizeMvps(JSON.parse(raw)) : [];
+    }catch(e){ mvps = []; }
+    try{
+      const rawSort = localStorage.getItem(SORT_MODE_KEY);
+      if(rawSort === 'manual' || rawSort === 'urgency') sortMode = rawSort;
+    }catch(e){}
+    try{
+      const rawView = localStorage.getItem(VIEW_MODE_KEY);
+      if(rawView === 'tiles' || rawView === 'table') viewMode = rawView;
+    }catch(e){}
+    try{
+      const rawMirror = localStorage.getItem(MIRROR_LOG_KEY);
+      if(rawMirror) mirrorLog = JSON.parse(rawMirror);
+    }catch(e){ mirrorLog = []; }
+    try{
+      const rawVol = localStorage.getItem(VOLUME_KEY);
+      const parsed = parseFloat(rawVol);
+      if(!isNaN(parsed) && parsed >= 0 && parsed <= 1) alertVolume = parsed;
+    }catch(e){}
+    try{
+      const rawTheme = localStorage.getItem(THEME_KEY);
+      if(rawTheme === 'dark' || rawTheme === 'light') theme = rawTheme;
+    }catch(e){}
+    try{
+      const rawKillCount = localStorage.getItem(KILL_COUNT_KEY);
+      if(rawKillCount !== null){
+        globalKillCount = parseInt(rawKillCount, 10) || 0;
+      } else {
+        // First time this feature runs: backfill from whatever per-MVP totals exist,
+        // rather than starting everyone at zero.
+        globalKillCount = mvps.reduce((sum, m) => sum + (m.totalKills || 0), 0);
+        saveKillCount();
+      }
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(mvps)); }catch(e){}
+    if(fbUser && !applyingRemoteUpdate) pushSharedData();
+  }
+  function saveSortMode(){
+    try{ localStorage.setItem(SORT_MODE_KEY, sortMode); }catch(e){}
+  }
+  function saveViewMode(){
+    try{ localStorage.setItem(VIEW_MODE_KEY, viewMode); }catch(e){}
+  }
+  function saveMirrorLog(){
+    try{ localStorage.setItem(MIRROR_LOG_KEY, JSON.stringify(mirrorLog)); }catch(e){}
+  }
+  function saveKillCount(){
+    try{ localStorage.setItem(KILL_COUNT_KEY, String(globalKillCount)); }catch(e){}
+  }
+  function saveVolume(){
+    try{ localStorage.setItem(VOLUME_KEY, String(alertVolume)); }catch(e){}
+  }
+  function saveTheme(){
+    try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+  }
+  function applyTheme(){
+    document.body.classList.toggle('light-theme', theme === 'light');
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn) btn.textContent = theme === 'light' ? 'Dark mode' : 'Light mode';
+  }
+  function saveUsername(){
+    try{ localStorage.setItem(USERNAME_KEY, username); }catch(e){}
+  }
+
+  // --- Firebase: Google sign-in + live Firestore sync of shared MVP timers ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCn2rqGG5Y-dDohy4UznCKgCA0VaR9P_AA",
+    authDomain: "mvp-watch-astro.firebaseapp.com",
+    projectId: "mvp-watch-astro",
+    storageBucket: "mvp-watch-astro.firebasestorage.app",
+    messagingSenderId: "949103117260",
+    appId: "1:949103117260:web:31a05e89237a34a9709369",
+    measurementId: "G-D7V4RBK41F"
+  };
+
+  function initFirebase(){
+    try{
+      if(typeof firebase === 'undefined'){
+        const statusEl = document.getElementById('authStatus');
+        if(statusEl) statusEl.textContent = 'Could not load Firebase — check your internet connection and reload.';
+        return;
+      }
+      fbApp = firebase.initializeApp(firebaseConfig);
+      fbAuth = firebase.auth();
+      fbDb = firebase.firestore();
+      fbAuth.onAuthStateChanged(onAuthChanged);
+    }catch(e){
+      console.error('Firebase init failed', e);
+      const statusEl = document.getElementById('authStatus');
+      if(statusEl) statusEl.textContent = 'Firebase failed to start: ' + e.message;
+    }
+  }
+
+  function signIn(){
+    if(!fbAuth) return;
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const statusEl = document.getElementById('authStatus');
+    if(statusEl) statusEl.textContent = '';
+    fbAuth.signInWithPopup(provider).catch(err => {
+      if(statusEl) statusEl.textContent = 'Sign-in failed: ' + err.message;
+    });
+  }
+
+  const PASSWORD_AUTH_DOMAIN = 'mvpwatch.local'; // Firebase's email/password sign-in requires an
+                                                  // email-shaped identifier internally; this silently
+                                                  // appends a fake domain so people just type a plain
+                                                  // username, matching how the account gets created.
+  function usernameToLoginEmail(u){
+    const trimmed = u.trim().toLowerCase();
+    return trimmed.includes('@') ? trimmed : (trimmed + '@' + PASSWORD_AUTH_DOMAIN);
+  }
+
+  function signInWithPassword(){
+    if(!fbAuth) return;
+    const rawUsername = document.getElementById('loginEmailInput').value.trim();
+    const password = document.getElementById('loginPasswordInput').value;
+    const statusEl = document.getElementById('authStatus');
+    if(!rawUsername || !password){
+      if(statusEl) statusEl.textContent = 'Enter both a username and password.';
+      return;
+    }
+    const email = usernameToLoginEmail(rawUsername);
+    if(statusEl) statusEl.textContent = '';
+    fbAuth.signInWithEmailAndPassword(email, password).catch(err => {
+      if(statusEl) statusEl.textContent = 'Sign-in failed: ' + err.message;
+    });
+  }
+
+  function signOutUser(){
+    if(!fbAuth) return;
+    fbAuth.signOut();
+  }
+
+  function onAuthChanged(user){
+    fbUser = user;
+    const gateMsg = document.getElementById('authGateMessage');
+    const appRoot = document.getElementById('appRoot');
+    const signInBtn = document.getElementById('signInBtn');
+    const signedInBar = document.getElementById('signedInBar');
+    const passwordBar = document.getElementById('passwordAuthBar');
+    const statusEl = document.getElementById('authStatus');
+
+    if(user){
+      username = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
+      saveUsername();
+      const nameEl = document.getElementById('signedInName');
+      if(nameEl) nameEl.textContent = username;
+      if(signInBtn) signInBtn.style.display = 'none';
+      if(signedInBar) signedInBar.style.display = 'flex';
+      if(passwordBar) passwordBar.style.display = 'none';
+      if(gateMsg) gateMsg.style.display = 'none';
+      if(appRoot) appRoot.style.display = '';
+      if(statusEl) statusEl.textContent = '';
+      subscribeToSharedData();
+      startPresenceHeartbeat();
+      subscribeToPresence();
+    } else {
+      if(signInBtn) signInBtn.style.display = '';
+      if(signedInBar) signedInBar.style.display = 'none';
+      if(passwordBar) passwordBar.style.display = '';
+      if(gateMsg) gateMsg.style.display = '';
+      if(appRoot) appRoot.style.display = 'none';
+      if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+      stopPresenceHeartbeat();
+      if(presenceUnsub){ presenceUnsub(); presenceUnsub = null; }
+    }
+  }
+
+  // --- Presence: a lightweight "who's online" indicator. Each signed-in device writes
+  // its own heartbeat doc every 25s; anyone's client considers a person "online" if their
+  // heartbeat is under a minute old — no explicit sign-out tracking needed, stale entries
+  // just age out on their own if a tab closes without a clean sign-out.
+  const PRESENCE_STALE_MS = 60000;
+  let presenceInterval = null;
+  let presenceUnsub = null;
+
+  function presenceDocRef(){
+    return fbDb.collection('presence').doc(fbUser.uid);
+  }
+
+  function writePresenceHeartbeat(){
+    if(!fbUser || !fbDb) return;
+    presenceDocRef().set({ name: username, lastSeen: Date.now() }).catch(()=>{});
+  }
+
+  function startPresenceHeartbeat(){
+    stopPresenceHeartbeat();
+    writePresenceHeartbeat();
+    presenceInterval = setInterval(writePresenceHeartbeat, 25000);
+  }
+
+  function stopPresenceHeartbeat(){
+    if(presenceInterval){ clearInterval(presenceInterval); presenceInterval = null; }
+    if(fbUser && fbDb){
+      try{ presenceDocRef().delete().catch(()=>{}); }catch(e){}
+    }
+    const el = document.getElementById('presenceIndicator');
+    if(el) el.textContent = '';
+  }
+
+  function subscribeToPresence(){
+    if(presenceUnsub){ presenceUnsub(); presenceUnsub = null; }
+    presenceUnsub = fbDb.collection('presence').onSnapshot((snap)=>{
+      const now = Date.now();
+      const names = [];
+      snap.forEach(doc=>{
+        const d = doc.data();
+        if(d && d.lastSeen && (now - d.lastSeen) < PRESENCE_STALE_MS) names.push(d.name);
+      });
+      const el = document.getElementById('presenceIndicator');
+      if(el){
+        el.textContent = names.length
+          ? `${names.length} online — ${names.join(', ')}`
+          : '';
+      }
+    }, ()=>{});
+  }
+
+  window.addEventListener('beforeunload', ()=>{
+    if(fbUser && fbDb){
+      try{ presenceDocRef().delete(); }catch(e){}
+    }
+  });
+
+  function sharedDocRef(){
+    return fbDb.collection('mvpwatch').doc('shared');
+  }
+
+  function subscribeToSharedData(){
+    if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+    fbUnsub = sharedDocRef().onSnapshot((doc)=>{
+      if(!doc.exists){
+        // Nothing shared yet — seed it with whatever's currently local (e.g. an import you just did).
+        pushSharedData();
+        return;
+      }
+      const data = doc.data();
+      applyingRemoteUpdate = true;
+      try{
+        const incoming = Array.isArray(data.mvps) ? data.mvps : [];
+        // Convex Mirror flags are local-only and never synced — merge back in from what
+        // this device already had, matching by kill timestamp, before replacing mvps.
+        const merged = incoming.map(remoteMvp => {
+          const localMvp = mvps.find(m => m.id === remoteMvp.id);
+          const localMirrorByTs = new Map((localMvp && localMvp.killLog || []).map(k => [k.ts, k.mirror]));
+          const killLog = (remoteMvp.killLog || []).map(k => ({
+            ts: k.ts,
+            mirror: localMirrorByTs.has(k.ts) ? localMirrorByTs.get(k.ts) : false
+          }));
+          return Object.assign({}, remoteMvp, { killLog });
+        });
+        mvps = normalizeMvps(merged);
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(mvps)); }catch(e){}
+        render();
+      } finally {
+        applyingRemoteUpdate = false;
+      }
+    }, (err) => {
+      console.error('Firestore listen error', err);
+      const statusEl = document.getElementById('authStatus');
+      if(statusEl) statusEl.textContent = 'Sync error: ' + err.message;
+    });
+  }
+
+  function pushSharedData(){
+    if(!fbUser || !fbDb) return;
+    // Strip the local-only mirror flag before writing — Convex Mirror usage stays private
+    // to whoever logged it, never shared with the group.
+    const payload = mvps.map(m => {
+      const copy = Object.assign({}, m);
+      copy.killLog = (m.killLog || []).map(k => ({ ts: k.ts }));
+      return copy;
+    });
+    sharedDocRef().set({ mvps: payload, updatedAt: Date.now(), updatedBy: username }, { merge: false })
+      .catch(err => {
+        console.error('Firestore write failed', err);
+        const statusEl = document.getElementById('authStatus');
+        if(statusEl) statusEl.textContent = 'Sync error: ' + err.message;
+      });
+  }
+
+  function syncSortModeSelect(){
+    const el = document.getElementById('sortModeSelect');
+    if(el) el.value = sortMode;
+  }
+  function syncViewModeSelect(){
+    const el = document.getElementById('viewModeSelect');
+    if(el) el.value = viewMode;
+  }
+  function syncVolumeSlider(){
+    const el = document.getElementById('volumeSlider');
+    const label = document.getElementById('volumeLabel');
+    if(el) el.value = Math.round(alertVolume*100);
+    if(label) label.textContent = Math.round(alertVolume*100) + '%';
+  }
+  function renderMirrorStats(){
+    const el = document.getElementById('mirrorStats');
+    if(!el) return;
+    const todayStart = startOfDay(Date.now());
+    const todayCount = mirrorLog.filter(ts => ts >= todayStart).length;
+    el.textContent = `Convex Mirrors — today: ${todayCount} · all-time: ${mirrorLog.length}`;
+  }
+
+  function renderKillStats(){
+    const el = document.getElementById('killStats');
+    if(!el) return;
+    const todayStart = startOfDay(Date.now());
+    const todayCount = mvps.reduce((sum, m) => sum + (m.killLog || []).filter(k => k.ts >= todayStart).length, 0);
+    el.textContent = `Your kills — today: ${todayCount} · all-time: ${globalKillCount}`;
+  }
+
+  // Shows a live count of MVPs currently spawnable (window open or overdue) in both the
+  // tab title and a badge drawn onto the favicon, so it's visible without the tab focused.
+  function updateTabBadge(){
+    const now = Date.now();
+    const count = mvps.filter(m => {
+      const phase = computeState(m, now).phase;
+      return phase === 'window' || phase === 'overdue';
+    }).length;
+
+    try{
+      document.title = count > 0 ? `(${count}) MVP Watch` : 'MVP Watch — Spawn Tracker';
+    }catch(e){}
+
+    try{
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      if(count > 0){
+        ctx.fillStyle = '#b0483f';
+        ctx.beginPath();
+        ctx.arc(32, 32, 30, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 34px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(count > 99 ? '99+' : String(count), 32, 35);
+      } else {
+        ctx.fillStyle = '#c9a34e';
+        ctx.beginPath();
+        ctx.arc(32, 32, 28, 0, Math.PI*2);
+        ctx.fill();
+      }
+      let link = document.getElementById('dynFavicon');
+      if(!link){
+        link = document.createElement('link');
+        link.id = 'dynFavicon';
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = canvas.toDataURL('image/png');
+    }catch(e){}
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function fmtClock(ts){
+    return new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+
+  // Converts a GMT/UTC "HH:MM" (as seen in a kill announcement) into an actual timestamp.
+  // Assumes it happened today in UTC; if that would land in the future, it must have been
+  // yesterday (UTC) instead, so we roll back a day.
+  function gmtTimeToTimestamp(hhmm){
+    const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return null;
+    const hh = parseInt(m[1],10), mm = parseInt(m[2],10);
+    if(hh > 23 || mm > 59) return null;
+    const now = new Date();
+    let ts = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hh, mm, 0);
+    if(ts > Date.now()) ts -= 86400000;
+    return ts;
+  }
+
+  // Reverse of the above — formats a timestamp back into a GMT "HH:MM" string, for
+  // pre-filling an edit field with the kill's current recorded time.
+  function timestampToGmtHHMM(ts){
+    const d = new Date(ts);
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+
+  // Converts an "H hours, M minutes from now" duration (matching the game's own countdown
+  // display) into a future timestamp.
+  function hoursMinutesToTimestamp(hoursStr, minsStr){
+    const h = parseFloat(hoursStr);
+    const m = parseFloat(minsStr);
+    const hh = isNaN(h) ? 0 : h;
+    const mm = isNaN(m) ? 0 : m;
+    if(hh < 0 || mm < 0) return null;
+    if((hoursStr === '' || hoursStr === undefined) && (minsStr === '' || minsStr === undefined)) return null;
+    return Date.now() + (hh*60 + mm)*60000;
+  }
+
+  // Projects the next N windows after the one currently being tracked, in case this
+  // spawn gets missed. Anchored to whichever base time is driving the current countdown
+  // (the kill time, or the pinned exact time), assuming a same-length kill/notice cycle
+  // repeats each time it's missed.
+  function futureWindows(mvp, count){
+    const base = mvp.exactAt || mvp.killedAt;
+    if(!base) return [];
+    const windows = [];
+    for(let n=2; n<=1+count; n++){
+      windows.push({ n, start: base + n*mvp.minMs, end: base + n*mvp.maxMs });
+    }
+    return windows;
+  }
+
+  function startOfDay(ts){
+    const d = new Date(ts);
+    d.setHours(0,0,0,0);
+    return d.getTime();
+  }
+
+  // Daily kill counts for the trailing `days` days, index 0 = today, index (days-1) = oldest.
+  function dailyKillCounts(mvp, days){
+    const todayStart = startOfDay(Date.now());
+    const log = mvp.killLog || [];
+    const counts = [];
+    for(let i=0; i<days; i++){
+      const dayStart = todayStart - i*86400000;
+      const dayEnd = dayStart + 86400000;
+      const count = log.filter(e => e.ts >= dayStart && e.ts < dayEnd).length;
+      counts.push({ dayStart, count });
+    }
+    return counts;
+  }
+
+  function dayLabel(i, dayStart){
+    if(i === 0) return 'Today';
+    if(i === 1) return 'Yesterday';
+    return new Date(dayStart).toLocaleDateString(undefined, { weekday:'short' });
+  }
+
+  // Keep killLog from growing forever — only need the trailing week or so for the stats shown.
+  function trimKillLog(mvp){
+    const cutoff = Date.now() - 8*86400000;
+    mvp.killLog = (mvp.killLog || []).filter(e => e.ts >= cutoff);
+  }
+
+  function fmtDuration(ms){
+    const sign = ms < 0 ? '-' : '';
+    ms = Math.abs(ms);
+    const totalSec = Math.floor(ms/1000);
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    return sign + [h,m,s].map((v,i)=> i===0 ? String(v) : String(v).padStart(2,'0')).join(':');
+  }
+
+  function computeState(mvp, now){
+    // An exact pinned time always takes priority over the min/max window.
+    if(mvp.exactAt){
+      if(now < mvp.exactAt){
+        const started = mvp.killedAt || (mvp.exactAt - Math.max(mvp.maxMs, 60000));
+        return { phase:'exact', earliest: mvp.exactAt, latest: mvp.exactAt, pct: Math.min(100, ((now-started)/(mvp.exactAt-started))*100) };
+      } else {
+        return { phase:'overdue', earliest: mvp.exactAt, latest: mvp.exactAt, pct:100 };
+      }
+    }
+    if(!mvp.killedAt){
+      return { phase:'unknown' };
+    }
+    const earliest = mvp.killedAt + mvp.minMs;
+    const latest = mvp.killedAt + mvp.maxMs;
+    if(now < earliest){
+      return { phase:'dead', earliest, latest, pct: Math.min(100,((now-mvp.killedAt)/(earliest-mvp.killedAt))*100) };
+    } else if(now <= latest){
+      return { phase:'window', earliest, latest, pct: mvp.maxMs>mvp.minMs ? ((now-earliest)/(latest-earliest))*100 : 100 };
+    } else {
+      return { phase:'overdue', earliest, latest, pct:100 };
+    }
+  }
+
+  function statusDisplay(mvp, st, now){
+    let statusClass = 'status-unknown', badge = 'NOT TRACKED', countdown = '—', countdownLabel = '', absTime = '';
+    if(st.phase === 'dead'){
+      statusClass = 'status-dead'; badge = 'DOWNED';
+      countdown = fmtDuration(st.earliest - now);
+      countdownLabel = 'until earliest spawn';
+      absTime = fmtClock(st.earliest);
+    } else if(st.phase === 'window'){
+      statusClass = 'status-window'; badge = 'MAY BE UP';
+      countdown = fmtDuration(st.latest - now);
+      countdownLabel = 'until spawn window closes';
+      absTime = fmtClock(st.latest);
+    } else if(st.phase === 'exact'){
+      statusClass = 'status-exact'; badge = 'PINPOINTED';
+      countdown = fmtDuration(st.earliest - now);
+      countdownLabel = 'until exact spawn time';
+      absTime = fmtClock(st.earliest);
+    } else if(st.phase === 'overdue'){
+      statusClass = mvp.exactAt ? 'status-overdue-exact' : 'status-overdue';
+      badge = 'SHOULD BE UP';
+      countdown = fmtDuration(now - st.latest);
+      countdownLabel = mvp.exactAt ? 'past pinned spawn time' : 'past latest spawn time';
+      absTime = fmtClock(st.latest);
+      if(mvp.blinkMuted) statusClass += ' blink-muted';
+    } else {
+      countdownLabel = 'mark killed to start tracking';
+    }
+    const pct = st.pct !== undefined ? Math.max(0,Math.min(100,st.pct)) : 0;
+    return { statusClass, badge, countdown, countdownLabel, pct, absTime };
+  }
+
+  // Full rebuild: called after structural changes (add/delete/kill/reset/pin open-close/etc).
+  // Compact table view: one summary row per MVP, with an expand toggle that reveals the
+  // exact same interactive card (via cardHtml) inline below it — no duplicated logic.
+  // Builds the <tbody> rows for one table (used for both left/right column tables below).
+  function tableRowsHtml(list, now, colspan){
+    return list.map(mvp => {
+      const st = computeState(mvp, now);
+      const { statusClass, badge, countdown, absTime } = statusDisplay(mvp, st, now);
+      const expanded = expandedTableRows.has(mvp.id);
+      const lastKill = mvp.lastKillBy ? escapeHtml(mvp.lastKillBy) : '—';
+      let rowHtml = `
+        <tr class="table-row ${statusClass} ${expanded ? 'expanded' : ''}" data-id="${mvp.id}">
+          <td class="table-chevron">${expanded ? '▾' : '▸'}</td>
+          <td class="table-name">${escapeHtml(mvp.name)}</td>
+          <td><span class="status-badge">${badge}</span></td>
+          <td class="table-cell-when">
+            <div class="table-cell-countdown">${countdown}</div>
+            <div class="table-cell-abs">${absTime || '—'}</div>
+          </td>
+          <td class="table-cell-lastkill">${lastKill}</td>
+        </tr>`;
+      if(expanded){
+        rowHtml += `<tr class="table-expand-row" data-id="${mvp.id}"><td colspan="${colspan}">${cardHtml(mvp, now)}</td></tr>`;
+      }
+      return rowHtml;
+    }).join('');
+  }
+
+  function oneTableHtml(list, now){
+    return `
+      <table class="mvp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>MVP</th>
+            <th>Status</th>
+            <th>When</th>
+            <th>Last Kill</th>
+          </tr>
+        </thead>
+        <tbody>${tableRowsHtml(list, now, 5)}</tbody>
+      </table>`;
+  }
+
+  function renderTableHtml(sorted, now){
+    // Two side-by-side tables so more MVPs are visible without scrolling — first half on
+    // the left, continuing into the right, preserving sort order top-to-bottom then across.
+    const mid = Math.ceil(sorted.length / 2);
+    const left = sorted.slice(0, mid);
+    const right = sorted.slice(mid);
+    if(right.length === 0) return oneTableHtml(left, now);
+    return `<div class="table-columns">${oneTableHtml(left, now)}${oneTableHtml(right, now)}</div>`;
+  }
+
+  function render(){
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('emptyMsg');
+    if(mvps.length === 0){
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      updateTabBadge();
+      return;
+    }
+    empty.style.display = 'none';
+
+    const now = Date.now();
+    const sorted = [...mvps].sort((a,b)=>{
+      if(sortMode === 'manual'){
+        return (a.order ?? 0) - (b.order ?? 0);
+      }
+      // Pure "next relevant moment" ordering: a card's earliest possible/known spawn moment
+      // (already-passed moments sort first, naturally putting overdue and currently-open
+      // windows ahead of anything still waiting — no artificial phase grouping on top of it).
+      const sa = computeState(a, now), sb = computeState(b, now);
+      const ka = sa.earliest !== undefined ? sa.earliest : Infinity;
+      const kb = sb.earliest !== undefined ? sb.earliest : Infinity;
+      return ka - kb;
+    });
+
+    grid.classList.toggle('table-mode', viewMode === 'table');
+    grid.innerHTML = viewMode === 'table'
+      ? renderTableHtml(sorted, now)
+      : sorted.map(mvp => cardHtml(mvp, now)).join('');
+    updateTabBadge();
+  }
+
+  // Builds the full interactive card markup for one MVP — shared by both the tile grid
+  // and the expanded row in table view, so there's exactly one copy of this logic.
+  function cardHtml(mvp, now){
+      const st = computeState(mvp, now);
+      const { statusClass, badge, countdown, countdownLabel, pct, absTime } = statusDisplay(mvp, st, now);
+      const minLabel = (mvp.minMs/60000)+'m';
+      const maxLabel = (mvp.maxMs/60000)+'m';
+      const pinned = !!mvp.exactAt;
+      const showLogForm = openLogForms.has(mvp.id);
+      const logCat = logCategory.get(mvp.id) || 'died';
+      const mirrorChecked = mirrorDrafts.has(mvp.id);
+      const pinFormDefault = pinDrafts.has(mvp.id) ? pinDrafts.get(mvp.id) : '';
+      const pinHDraft = pinHDrafts.has(mvp.id) ? pinHDrafts.get(mvp.id) : '';
+      const pinMDraft = pinMDrafts.has(mvp.id) ? pinMDrafts.get(mvp.id) : '';
+      const pinKillTimeDraft = pinKillTimeDrafts.has(mvp.id) ? pinKillTimeDrafts.get(mvp.id) : '';
+      const pinModeVal = pinMode.get(mvp.id) || 'hm';
+      let pinHmPreview = '';
+      if(pinModeVal === 'hm' && (pinHDraft || pinMDraft)){
+        const ts = hoursMinutesToTimestamp(pinHDraft, pinMDraft);
+        if(ts) pinHmPreview = '= ' + fmtClock(ts);
+      }
+      let pinKillTimePreview = '';
+      if(pinModeVal === 'killtime' && pinKillTimeDraft){
+        const killTs = gmtTimeToTimestamp(pinKillTimeDraft);
+        if(killTs) pinKillTimePreview = '= respawns ' + fmtClock(killTs + mvp.minMs);
+      }
+      const hasAnchor = !!(mvp.killedAt || mvp.exactAt);
+      const showDetails = openDetails.has(mvp.id);
+      const futureRows = showDetails ? futureWindows(mvp, 4) : [];
+      const dayCounts = dailyKillCounts(mvp, 7);
+      const todayCount = dayCounts[0].count;
+      const weekAvg = (dayCounts.reduce((s,c)=>s+c.count,0) / 7).toFixed(1);
+      const isEditingName = editingNames.has(mvp.id);
+      const killLogDraft = killLogDrafts.has(mvp.id) ? killLogDrafts.get(mvp.id) : '';
+      const killLogGmtDraft = killLogGmtDrafts.has(mvp.id) ? killLogGmtDrafts.get(mvp.id) : '';
+      const killLogModeVal = killLogMode.get(mvp.id) || 'ago';
+      let gmtPreview = '';
+      if(killLogModeVal === 'gmt' && killLogGmtDraft){
+        const ts = gmtTimeToTimestamp(killLogGmtDraft);
+        if(ts) gmtPreview = '= ' + new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) + ' your time';
+      }
+
+      return `<div class="card ${statusClass}" data-id="${mvp.id}" draggable="false">
+        ${isEditingName ? `
+        <div class="name-edit-row">
+          <input type="text" class="name-input" value="${escapeHtml(mvp.name)}" placeholder="MVP name">
+          <div class="name-edit-actions">
+            <button class="name-save-btn" data-action="savename">Save</button>
+            <button class="name-cancel-btn" data-action="cancelname">Cancel</button>
+          </div>
+        </div>` : `
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="drag-handle" title="Drag to reorder"></div>
+            <div class="title-block">
+              <div class="title-row">
+                <span class="mvp-name">${escapeHtml(mvp.name)}</span>
+                <span class="status-badge">${badge}</span>
+                ${mvp.lastKillBy ? `<span class="kill-attrib-inline">by ${escapeHtml(mvp.lastKillBy)}</span>` : ''}
+              </div>
+              ${mvp.map ? `<p class="mvp-map">${escapeHtml(mvp.map)}</p>` : ''}
+            </div>
+          </div>
+          <div class="card-top-actions">
+            ${statusClass.indexOf('status-overdue') === 0 ? `<button class="mute-blink-btn" data-action="toggleblinkmute" title="${mvp.blinkMuted ? 'Unmute blink' : 'Mute blink'}">${mvp.blinkMuted ? '\u{1F515}' : '\u{1F514}'}</button>` : ''}
+            <button class="edit-btn" data-action="editname" title="Rename">&#9998;</button>
+            <button class="del-btn" data-action="delete" title="Remove">&times;</button>
+          </div>
+        </div>`}
+        ${pinned ? `<div class="pin-tag">Pinned to ${new Date(mvp.exactAt).toLocaleString()} <button class="pin-clear-link" data-action="clearpin">(clear)</button></div>` : ''}
+        <div class="countdown-row">
+          <span class="countdown">${countdown}</span>
+          ${absTime ? `<span class="countdown-abs">${absTime}</span>` : ''}
+        </div>
+        <div class="countdown-label">${countdownLabel}</div>
+        <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-labels"><span>${minLabel}</span><span>${maxLabel}</span></div>
+        <div class="card-actions">
+          <button class="log-btn ${showLogForm ? 'active' : ''}" data-action="${showLogForm ? 'closelog' : 'openlog'}">Log a kill</button>
+          <button class="reset-btn" data-action="reset">Reset</button>
+        </div>
+        ${showLogForm ? `
+        <div class="pin-form log-form">
+          <div class="log-tabs">
+            <button class="log-tab ${logCat==='died' ? 'active' : ''}" data-action="logcatdied">It died</button>
+            <button class="log-tab ${logCat==='respawn' ? 'active' : ''}" data-action="logcatrespawn">I know the respawn time</button>
+          </div>
+          <label class="mirror-check">
+            <input type="checkbox" class="mirror-checkbox" ${mirrorChecked ? 'checked' : ''}>
+            Used a Convex Mirror to find this out
+          </label>
+          ${logCat === 'died' ? `
+            ${killLogModeVal === 'gmt' ? `
+            <label>GMT time it died (24h, HH:MM)</label>
+            <input type="text" inputmode="numeric" placeholder="e.g. 14:32" class="killlog-gmt-input" value="${escapeHtml(killLogGmtDraft)}">
+            ${gmtPreview ? `<div class="killlog-gmt-preview">${gmtPreview}</div>` : ''}
+            <button class="killlog-mode-switch" data-action="killlogmodeago">Use "minutes ago" instead</button>
+            ` : `
+            <label>How many minutes ago did it die? (0 = just now)</label>
+            <input type="number" min="0" step="0.5" class="killlog-input" placeholder="e.g. 12, or leave blank for now" value="${killLogDraft}">
+            <button class="killlog-mode-switch" data-action="killlogmodegmt">I know the exact GMT kill time instead</button>
+            `}
+            <div class="killlog-form-actions">
+              <button class="killlog-mine-btn" data-action="logmykill">I got the kill</button>
+              <button class="killlog-other-btn" data-action="logotherkill">Someone else got it</button>
+            </div>
+          ` : `
+            ${pinModeVal === 'killtime' ? `
+            <label>Exact GMT kill time (24h, HH:MM) — respawn is calculated from this</label>
+            <input type="text" inputmode="numeric" placeholder="e.g. 14:32" class="pin-killtime-input" value="${escapeHtml(pinKillTimeDraft)}">
+            ${pinKillTimePreview ? `<div class="pin-clock-preview">${pinKillTimePreview}</div>` : ''}
+            <button class="pin-mode-switch" data-action="pinmodeminutes">Use minutes from now instead</button>
+            ` : pinModeVal === 'hm' ? `
+            <label>Time until respawn (as shown in-game)</label>
+            <div class="pin-hm-row">
+              <input type="number" min="0" step="1" class="pin-h-input" placeholder="H" value="${escapeHtml(pinHDraft)}">
+              <span class="pin-hm-sep">h</span>
+              <input type="number" min="0" step="1" class="pin-m-input" placeholder="M" value="${escapeHtml(pinMDraft)}">
+              <span class="pin-hm-sep">m</span>
+            </div>
+            ${pinHmPreview ? `<div class="pin-clock-preview">${pinHmPreview}</div>` : ''}
+            <button class="pin-mode-switch" data-action="pinmodekilltime">I know the exact game kill time instead</button>
+            ` : `
+            <label>Spawns in how many minutes, from now</label>
+            <input type="number" min="0" step="0.5" class="pin-input" placeholder="e.g. 42" value="${pinFormDefault}">
+            <button class="pin-mode-switch" data-action="pinmodehm">I have hours/minutes until respawn instead</button>
+            `}
+            <div class="killlog-form-actions">
+              <button class="killlog-mine-btn" data-action="setpinmine">I got the kill</button>
+              <button class="killlog-other-btn" data-action="setpinother">Someone else got it</button>
+            </div>
+          `}
+          <button class="log-form-cancel" data-action="closelog">Cancel</button>
+        </div>` : ''}
+        <button class="details-toggle-btn ${showDetails ? 'active' : ''}" data-action="${showDetails ? 'closedetails' : 'opendetails'}">${showDetails ? 'Hide details' : 'Details'}</button>
+        ${showDetails ? `
+        <div class="details-panel">
+          <div class="kill-stats">Today: <b>${todayCount}</b> kills &nbsp;·&nbsp; 7-day avg: <b>${weekAvg}</b>/day &nbsp;·&nbsp; All-time: <b>${mvp.totalKills || 0}</b></div>
+          ${(mvp.killLog && mvp.killLog.length) ? `
+          <div class="details-subhead">Recent kills — fix a missed mirror flag or wrong time here</div>
+          <div class="recent-kills-list">
+            ${[...mvp.killLog].sort((a,b)=>b.ts-a.ts).slice(0,5).map((k,ki) => {
+              const isMostRecent = ki === 0;
+              const isEditingThis = isMostRecent && editingRecentKill.has(mvp.id);
+              if(isEditingThis){
+                const draft = recentKillEditDrafts.has(mvp.id) ? recentKillEditDrafts.get(mvp.id) : timestampToGmtHHMM(k.ts);
+                const previewTs = gmtTimeToTimestamp(draft);
+                return `
+                <div class="pin-form recent-kill-edit-row">
+                  <label>GMT time it died (24h, HH:MM)</label>
+                  <input type="text" inputmode="numeric" class="recent-kill-time-input" placeholder="e.g. 14:32" value="${escapeHtml(draft)}">
+                  ${previewTs ? `<div class="pin-clock-preview">= ${fmtClock(previewTs)} your time</div>` : ''}
+                  <div class="killlog-form-actions">
+                    <button class="killlog-mine-btn" data-action="savekilltime" data-kill-ts="${k.ts}">Save</button>
+                    <button class="killlog-other-btn" data-action="cancelkilltimeedit">Cancel</button>
+                  </div>
+                </div>`;
+              }
+              return `
+              <div class="recent-kill-row">
+                <label class="recent-kill-row-main">
+                  <span>${fmtClock(k.ts)}</span>
+                  <span class="recent-kill-mirror">
+                    <input type="checkbox" class="recent-kill-mirror-check" data-kill-ts="${k.ts}" ${k.mirror ? 'checked' : ''}>
+                    mirror
+                  </span>
+                </label>
+                ${isMostRecent ? `<button class="recent-kill-edit-link" data-action="openeditkilltime">edit time</button>` : ''}
+              </div>`;
+            }).join('')}
+          </div>` : ''}
+          ${hasAnchor ? `
+          <div class="details-subhead">Next possible windows if missed</div>
+          <div class="future-list">
+            ${futureRows.map(w => `<div class="future-row"><span class="n">#${w.n}</span><span>${w.start===w.end ? fmtClock(w.start) : fmtClock(w.start) + ' – ' + fmtClock(w.end)}</span></div>`).join('')}
+          </div>` : ''}
+          <div class="details-subhead">7-day kill history</div>
+          <div class="history-list">
+            ${dayCounts.map((c,i) => `<div class="history-row ${i===0 ? 'today' : ''}"><span>${dayLabel(i, c.dayStart)}</span><span>${c.count}</span></div>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>`;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // --- notifications ---
+  function playTone(startOffset, freq, duration, volume){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      const t0 = audioCtx.currentTime + startOffset;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(volume, t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0); o.stop(t0+duration);
+    }catch(e){}
+  }
+
+  // Generic alert — a two-tone chirp repeated 3 times. Used as a fallback/default.
+  function alarm(){
+    const v = alertVolume;
+    const pattern = [880, 660];
+    for(let rep=0; rep<3; rep++){
+      const base = rep*0.55;
+      playTone(base, pattern[0], 0.16, 0.22*v);
+      playTone(base+0.18, pattern[1], 0.22, 0.22*v);
+    }
+  }
+
+  // 3-minute heads-up: calmer, lower-pitched, only two mellow chirps — a "notice" tone.
+  function alarm3Min(){
+    const v = alertVolume;
+    const pattern = [740, 560];
+    for(let rep=0; rep<2; rep++){
+      const base = rep*0.6;
+      playTone(base, pattern[0], 0.18, 0.2*v);
+      playTone(base+0.2, pattern[1], 0.22, 0.2*v);
+    }
+  }
+
+  // 1-minute alert: higher-pitched, faster, four quick beeps — used only as a fallback
+  // if the browser doesn't support speech synthesis.
+  function alarm1Min(){
+    const v = alertVolume;
+    for(let rep=0; rep<4; rep++){
+      playTone(rep*0.22, 1050, 0.14, 0.28*v);
+    }
+  }
+
+  // Best-effort pick of a female-sounding voice from whatever the browser/OS provides.
+  // The Web Speech API doesn't expose a gender field, so this matches on common naming
+  // patterns browsers/OSes actually use (e.g. Chrome's "Google UK English Female",
+  // Windows' "Microsoft Zira", macOS's "Samantha"). Falls back to the default voice
+  // if nothing matches — this is inherently best-effort, not guaranteed on every system.
+  function pickFemaleVoice(){
+    try{
+      if(!('speechSynthesis' in window)) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if(!voices || voices.length === 0) return null;
+      const femaleHints = ['female','zira','samantha','susan','victoria','karen','moira','tessa','fiona','salli','joanna','kimberly','ivy','aria','jenny'];
+      return voices.find(v => femaleHints.some(hint => v.name.toLowerCase().includes(hint))) || null;
+    }catch(e){ return null; }
+  }
+
+  // Spoken alert via the browser's built-in text-to-speech — kept short on purpose
+  // (just the number of minutes), so it's a quick cue rather than a full sentence.
+  function speak(text){
+    try{
+      if(!('speechSynthesis' in window)) return false;
+      window.speechSynthesis.cancel(); // don't let overlapping alerts queue up and stack
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.volume = alertVolume;
+      if(cachedFemaleVoice) utter.voice = cachedFemaleVoice;
+      window.speechSynthesis.speak(utter);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function notify(title, body, soundFn, speechText){
+    if(notifyEnabled && 'Notification' in window && Notification.permission === 'granted'){
+      try{ new Notification(title, {body}); }catch(e){}
+    }
+    const spoke = speechText ? speak(speechText) : false;
+    if(!spoke){
+      (soundFn || alarm)();
+    }
+  }
+
+  document.getElementById('notifyBtn').addEventListener('click', async ()=>{
+    if(!('Notification' in window)){ alert('This browser does not support notifications.'); return; }
+    const perm = await Notification.requestPermission();
+    notifyEnabled = perm === 'granted';
+    const btn = document.getElementById('notifyBtn');
+    btn.textContent = notifyEnabled ? 'Notifications on' : 'Enable notifications';
+    btn.classList.toggle('on', notifyEnabled);
+  });
+
+  document.getElementById('volumeSlider').addEventListener('input', (e)=>{
+    alertVolume = Math.max(0, Math.min(100, parseInt(e.target.value, 10))) / 100;
+    saveVolume();
+    syncVolumeSlider();
+  });
+
+  document.getElementById('testSound3Btn').addEventListener('click', ()=>{
+    if(!speak('Three minutes')) alarm3Min();
+  });
+  document.getElementById('testSound1Btn').addEventListener('click', ()=>{
+    if(!speak('One minute')) alarm1Min();
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      mvps, sortMode, mirrorLog
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mvp-watch-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importBtn').addEventListener('click', ()=>{
+    document.getElementById('importFileInput').click();
+  });
+
+  document.getElementById('importFileInput').addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try{
+        parsed = JSON.parse(reader.result);
+      }catch(err){
+        alert('That file isn\'t valid JSON — make sure it\'s an unmodified export from this tracker.');
+        e.target.value = '';
+        return;
+      }
+      if(!parsed || !Array.isArray(parsed.mvps)){
+        alert('That file doesn\'t look like an MVP Watch backup (missing an "mvps" list).');
+        e.target.value = '';
+        return;
+      }
+      const count = parsed.mvps.length;
+      if(!confirm(`This will replace your current MVP list (and history) with the backup's ${count} MVP${count===1?'':'s'}. This can't be undone. Continue?`)){
+        e.target.value = '';
+        return;
+      }
+      mvps = normalizeMvps(parsed.mvps);
+      sortMode = (parsed.sortMode === 'manual' || parsed.sortMode === 'urgency') ? parsed.sortMode : 'urgency';
+      mirrorLog = Array.isArray(parsed.mirrorLog) ? parsed.mirrorLog : [];
+      save();
+      saveSortMode();
+      saveMirrorLog();
+      syncSortModeSelect();
+      renderMirrorStats();
+      openLogForms.clear();
+      openDetails.clear();
+      editingNames.clear();
+      render();
+      e.target.value = '';
+      alert(`Imported ${count} MVP${count===1?'':'s'}.`);
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+    theme = theme === 'light' ? 'dark' : 'light';
+    applyTheme();
+    saveTheme();
+  });
+
+  document.getElementById('signInBtn').addEventListener('click', ()=>{
+    signIn();
+  });
+  document.getElementById('signOutBtn').addEventListener('click', ()=>{
+    signOutUser();
+  });
+  document.getElementById('passwordSignInBtn').addEventListener('click', ()=>{
+    signInWithPassword();
+  });
+  document.getElementById('loginPasswordInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') signInWithPassword();
+  });
+  document.getElementById('loginEmailInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') document.getElementById('loginPasswordInput').focus();
+  });
+
+  document.getElementById('collapseAllBtn').addEventListener('click', ()=>{
+    openDetails.clear();
+    render();
+  });
+
+  document.getElementById('sortModeSelect').addEventListener('change', (e)=>{
+    sortMode = e.target.value === 'manual' ? 'manual' : 'urgency';
+    saveSortMode();
+    render();
+  });
+
+  document.getElementById('viewModeSelect').addEventListener('change', (e)=>{
+    viewMode = e.target.value === 'table' ? 'table' : 'tiles';
+    saveViewMode();
+    render();
+  });
+
+  // --- drag-and-drop card reordering. Dragging always switches sort mode to "manual",
+  // since dragging is an explicit statement of custom order intent. A card is only
+  // draggable while the mouse is actually pressed down on its handle — otherwise a fast
+  // click with a slight wobble gets misread by the browser as a drag-start instead of a
+  // click, leaving buttons feeling unresponsive.
+  document.getElementById('grid').addEventListener('mousedown', (e)=>{
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    const card = handle.closest('.card');
+    if(card) card.setAttribute('draggable', 'true');
+  });
+
+  function resetAllDraggable(){
+    document.querySelectorAll('#grid .card[draggable="true"]').forEach(el => el.setAttribute('draggable', 'false'));
+  }
+  document.addEventListener('mouseup', resetAllDraggable);
+
+  document.getElementById('grid').addEventListener('dragstart', (e)=>{
+    const card = e.target.closest('.card');
+    if(!card) return;
+    draggedId = card.getAttribute('data-id');
+    card.classList.add('dragging');
+    try{
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedId);
+    }catch(err){}
+  });
+
+  document.getElementById('grid').addEventListener('dragend', (e)=>{
+    const card = e.target.closest('.card');
+    if(card) card.classList.remove('dragging');
+    document.querySelectorAll('#grid .card.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    resetAllDraggable();
+    draggedId = null;
+  });
+
+  document.getElementById('grid').addEventListener('dragover', (e)=>{
+    if(!draggedId) return;
+    const card = e.target.closest('.card');
+    if(!card) return;
+    e.preventDefault();
+    if(card.getAttribute('data-id') !== draggedId){
+      document.querySelectorAll('#grid .card.drag-over').forEach(el=>el.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    }
+  });
+
+  document.getElementById('grid').addEventListener('drop', (e)=>{
+    if(!draggedId) return;
+    const card = e.target.closest('.card');
+    if(!card) return;
+    e.preventDefault();
+    card.classList.remove('drag-over');
+    const targetId = card.getAttribute('data-id');
+    if(targetId === draggedId) return;
+
+    const fromIdx = mvps.findIndex(m => m.id === draggedId);
+    const toIdx = mvps.findIndex(m => m.id === targetId);
+    if(fromIdx === -1 || toIdx === -1) return;
+    const [moved] = mvps.splice(fromIdx, 1);
+    mvps.splice(toIdx, 0, moved);
+    mvps.forEach((m, i) => { m.order = i; });
+
+    sortMode = 'manual';
+    saveSortMode();
+    syncSortModeSelect();
+    save();
+    render();
+  });
+
+  // --- tick loop: updates countdown text/bars in place (never rebuilds DOM, so an open
+  // pin-time input keeps focus) + fires notifications on threshold cross. ---
+  function tick(){
+    const now = Date.now();
+    document.getElementById('clockNow').textContent = new Date(now).toLocaleTimeString();
+    renderMirrorStats();
+    renderKillStats();
+
+    let notifiedSomething = false;
+    mvps.forEach(mvp=>{
+      // The single target moment this MVP's alerts are anchored to: the pinned exact time
+      // if set, otherwise the earliest possible spawn of the tracked kill window.
+      const target = mvp.exactAt ? mvp.exactAt : (mvp.killedAt ? mvp.killedAt + mvp.minMs : null);
+      if(target === null) return;
+
+      if(!mvp.notified3Min && now >= target - 3*60000 && now < target){
+        mvp.notified3Min = true;
+        notify('3 min to spawn: ' + mvp.name, mvp.map ? ('Possible spawn in ~3 minutes at ' + mvp.map) : 'Possible spawn in ~3 minutes.', alarm3Min, 'Three minutes');
+        notifiedSomething = true;
+      }
+      if(!mvp.notified1Min && now >= target - 60000 && now < target){
+        mvp.notified1Min = true;
+        notify('1 min to spawn: ' + mvp.name, mvp.map ? ('Possible spawn in ~1 minute at ' + mvp.map) : 'Possible spawn in ~1 minute.', alarm1Min, 'One minute');
+        notifiedSomething = true;
+      }
+    });
+    if(notifiedSomething) save();
+
+    updateTabBadge();
+
+    document.querySelectorAll('#grid .card').forEach(cardEl=>{
+      const id = cardEl.getAttribute('data-id');
+      const mvp = mvps.find(m=>m.id===id);
+      if(!mvp) return;
+      const st = computeState(mvp, now);
+      const { statusClass, badge, countdown, countdownLabel, pct, absTime } = statusDisplay(mvp, st, now);
+      cardEl.className = 'card ' + statusClass;
+      const badgeEl = cardEl.querySelector('.status-badge');
+      if(badgeEl) badgeEl.textContent = badge;
+      const cdEl = cardEl.querySelector('.countdown');
+      if(cdEl) cdEl.textContent = countdown;
+      const cdlEl = cardEl.querySelector('.countdown-label');
+      if(cdlEl) cdlEl.textContent = countdownLabel;
+      const barEl = cardEl.querySelector('.bar-fill');
+      if(barEl) barEl.style.width = pct + '%';
+      const absEl = cardEl.querySelector('.countdown-abs');
+      if(absEl) absEl.textContent = absTime;
+    });
+
+    // Table view: summary rows aren't inside .card, so they need their own targeted refresh.
+    document.querySelectorAll('#grid tr.table-row').forEach(rowEl=>{
+      const id = rowEl.getAttribute('data-id');
+      const mvp = mvps.find(m=>m.id===id);
+      if(!mvp) return;
+      const st = computeState(mvp, now);
+      const { statusClass, badge, countdown, absTime } = statusDisplay(mvp, st, now);
+      const wasExpanded = rowEl.classList.contains('expanded');
+      rowEl.className = 'table-row ' + statusClass + (wasExpanded ? ' expanded' : '');
+      const badgeEl = rowEl.querySelector('.status-badge');
+      if(badgeEl) badgeEl.textContent = badge;
+      const cdEl = rowEl.querySelector('.table-cell-countdown');
+      if(cdEl) cdEl.textContent = countdown;
+      const absEl = rowEl.querySelector('.table-cell-abs');
+      if(absEl) absEl.textContent = absTime || '—';
+    });
+  }
+
+  // --- import from pasted AstroDB data (either raw JSON, or plain text copied off a monster's detail page) ---
+  function humanizeAegisName(aegis){
+    return aegis.toLowerCase().replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function extractJsonCandidates(data){
+    let arr;
+    if(Array.isArray(data)) arr = data;
+    else if(data && Array.isArray(data.monsters)) arr = data.monsters;
+    else if(data && Array.isArray(data.results)) arr = data.results;
+    else if(data && typeof data === 'object') arr = [data];
+    else arr = [];
+
+    return arr.map(item => {
+      let name = item.name;
+      if(!name || /^Monster #\d+$/i.test(name)){
+        name = item.aegis_name ? humanizeAegisName(item.aegis_name) : (name || 'Unknown');
+      }
+      const map = item.map || item.map_name || item.spawn_map || item.location || item.mapname || '';
+      return {
+        name, map,
+        minMinutes: null, maxMinutes: null,
+        meta: [item.aegis_name, map, (item.level!==undefined ? 'Lv.'+item.level : '')].filter(Boolean).join(' · ') || 'no extra fields found'
+      };
+    }).filter(c => c.name && c.name !== 'Unknown');
+  }
+
+  // Parses the plain text you get from select-all/copy on a monster's detail page, which
+  // includes a "SPAWN MAPS" section listing each map's respawn delay (ms, despite the site's
+  // "s" label — see chat) and mob amount per map.
+  function extractSpawnMapCandidates(text){
+    const nameMatch = text.match(/^(.+)\nID:\s*\d+\s*[•·]\s*\S+/m);
+    const name = nameMatch ? nameMatch[1].trim() : '';
+    if(!name) return [];
+
+    const spawnIdx = text.indexOf('SPAWN MAPS');
+    if(spawnIdx === -1) return [];
+    const tail = text.slice(spawnIdx);
+    const lines = tail.split('\n').map(l => l.trim()).filter(Boolean);
+    lines.shift(); // drop the "SPAWN MAPS (N)" heading line
+
+    const candidates = [];
+    const seen = new Set();
+    for(let i=0; i+1 < lines.length; i++){
+      const respawnMatch = lines[i+1] && lines[i+1].match(/Respawn:\s*(\d+)s/);
+      if(!respawnMatch) continue;
+      const map = lines[i];
+      const ms = parseInt(respawnMatch[1], 10);
+      const minutes = Math.round((ms/60000) * 100) / 100;
+      const key = map + '|' + minutes;
+      if(seen.has(key)) continue; // this monster listed the same map twice with identical timing
+      seen.add(key);
+      const amountMatch = lines[i+2] && lines[i+2].match(/(\d+)x Mobs/);
+      candidates.push({
+        name, map,
+        minMinutes: minutes, maxMinutes: minutes,
+        meta: `${minutes}m respawn${amountMatch ? ' · ' + amountMatch[1] + 'x on map' : ''} (assuming ms, not literal seconds)`
+      });
+      i += 1; // skip past the "Respawn:" line; the amount line gets skipped naturally next loop
+    }
+    return candidates;
+  }
+
+  let importCandidates = [];
+
+  document.getElementById('importParseBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('importInput').value.trim();
+    const statusEl = document.getElementById('importStatus');
+    const resultsEl = document.getElementById('importResults');
+    resultsEl.innerHTML = '';
+    if(!raw){ statusEl.textContent = 'Paste something first.'; statusEl.className = 'import-status error'; return; }
+
+    const looksLikeJson = raw[0] === '{' || raw[0] === '[';
+    if(looksLikeJson){
+      let data;
+      try{ data = JSON.parse(raw); }
+      catch(e){
+        statusEl.textContent = 'That starts like JSON but didn\'t parse — make sure you copied the full Response body.';
+        statusEl.className = 'import-status error';
+        return;
+      }
+      importCandidates = extractJsonCandidates(data);
+    } else {
+      importCandidates = extractSpawnMapCandidates(raw);
+    }
+
+    if(importCandidates.length === 0){
+      statusEl.textContent = 'Nothing usable found. Paste either the API JSON, or the full text of a monster\'s detail page (select-all → copy on that page).';
+      statusEl.className = 'import-status error';
+      return;
+    }
+
+    statusEl.textContent = `Found ${importCandidates.length} entr${importCandidates.length===1?'y':'ies'} — click "Use" to load one into the Add form below.`;
+    statusEl.className = 'import-status';
+
+    resultsEl.innerHTML = importCandidates.map((c, i) => `
+      <div class="import-row">
+        <div>
+          <div class="import-row-info">${escapeHtml(c.name)}</div>
+          <div class="import-row-meta">${escapeHtml(c.meta)}</div>
+        </div>
+        <button class="import-use-btn" data-import-index="${i}">Use</button>
+      </div>
+    `).join('');
+  });
+
+  document.getElementById('importResults').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-import-index]');
+    if(!btn) return;
+    const c = importCandidates[parseInt(btn.getAttribute('data-import-index'), 10)];
+    if(!c) return;
+    document.getElementById('f-name').value = c.name;
+    document.getElementById('f-map').value = c.map || '';
+    if(c.minMinutes !== null && c.minMinutes !== undefined){
+      document.getElementById('f-min').value = c.minMinutes;
+      document.getElementById('f-max').value = c.maxMinutes;
+    } else {
+      document.getElementById('f-min').value = '';
+      document.getElementById('f-max').value = '';
+    }
+    document.getElementById('f-min').focus();
+    document.querySelector('.add-form').scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+
+  // --- events ---
+  document.getElementById('addBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('f-name').value.trim();
+    const map = document.getElementById('f-map').value.trim();
+    const min = parseFloat(document.getElementById('f-min').value);
+    const max = parseFloat(document.getElementById('f-max').value);
+    if(!name){ alert('Enter an MVP name.'); return; }
+    if(isNaN(min) || isNaN(max) || min < 0 || max < min){ alert('Enter a valid min/max respawn time in minutes (max ≥ min).'); return; }
+
+    mvps.push({
+      id: uid(),
+      name, map,
+      minMs: min*60000,
+      maxMs: max*60000,
+      killedAt: null,
+      notifiedWindow: false,
+      exactAt: null,
+      notifiedExact: false,
+      notified3Min: false,
+      notified1Min: false,
+      lastKillBy: null,
+      blinkMuted: false,
+      order: mvps.length,
+      killLog: [],
+      totalKills: 0
+    });
+    save(); render();
+    document.getElementById('f-name').value='';
+    document.getElementById('f-map').value='';
+    document.getElementById('f-min').value='';
+    document.getElementById('f-max').value='';
+    document.getElementById('f-name').focus();
+  });
+
+  document.getElementById('grid').addEventListener('click', (e)=>{
+    // Table view: clicking a summary row (but not its expanded card content) toggles it open/closed.
+    const tableRow = e.target.closest('tr.table-row');
+    if(tableRow && !e.target.closest('.card')){
+      const rowId = tableRow.getAttribute('data-id');
+      if(expandedTableRows.has(rowId)) expandedTableRows.delete(rowId);
+      else expandedTableRows.add(rowId);
+      render();
+      return;
+    }
+
+    const btn = e.target.closest('button[data-action]');
+    if(!btn) return;
+    const card = e.target.closest('.card');
+    const id = card.getAttribute('data-id');
+    const mvp = mvps.find(m=>m.id===id);
+    if(!mvp) return;
+    const action = btn.getAttribute('data-action');
+
+    function closeLogForm(){
+      openLogForms.delete(id);
+      logCategory.delete(id);
+      killLogDrafts.delete(id);
+      killLogGmtDrafts.delete(id);
+      killLogMode.delete(id);
+      pinDrafts.delete(id);
+      pinHDrafts.delete(id);
+      pinMDrafts.delete(id);
+      pinKillTimeDrafts.delete(id);
+      pinMode.delete(id);
+      mirrorDrafts.delete(id);
+    }
+
+    if(action === 'reset'){
+      mvp.killedAt = null;
+      mvp.notifiedWindow = false;
+      mvp.exactAt = null;
+      mvp.notifiedExact = false;
+      mvp.notified3Min = false;
+      mvp.notified1Min = false;
+      mvp.lastKillBy = null;
+      mvp.blinkMuted = false;
+      closeLogForm();
+    } else if(action === 'delete'){
+      if(confirm('Remove ' + mvp.name + ' from the tracker?')){
+        mvps = mvps.filter(m=>m.id!==id);
+      }
+      closeLogForm();
+      openDetails.delete(id);
+      editingNames.delete(id);
+      editingRecentKill.delete(id);
+      recentKillEditDrafts.delete(id);
+      expandedTableRows.delete(id);
+    } else if(action === 'openlog'){
+      openLogForms.add(id);
+      logCategory.set(id, 'died');
+      killLogDrafts.delete(id);
+      killLogGmtDrafts.delete(id);
+      killLogMode.set(id, 'ago');
+      mirrorDrafts.delete(id);
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .killlog-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'closelog'){
+      closeLogForm();
+      render();
+      return;
+    } else if(action === 'logcatdied'){
+      logCategory.set(id, 'died');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .killlog-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'logcatrespawn'){
+      logCategory.set(id, 'respawn');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .pin-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'killlogmodegmt'){
+      killLogMode.set(id, 'gmt');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .killlog-gmt-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'killlogmodeago'){
+      killLogMode.set(id, 'ago');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .killlog-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'logmykill' || action === 'logotherkill'){
+      const mode = killLogMode.get(id) || 'ago';
+      let ts;
+      if(mode === 'gmt'){
+        const gmtInput = card.querySelector('.killlog-gmt-input');
+        ts = gmtTimeToTimestamp((gmtInput.value || '').trim());
+        if(ts === null){ alert('Enter the GMT time as HH:MM in 24-hour format, e.g. 14:32.'); return; }
+      } else {
+        const input = card.querySelector('.killlog-input');
+        const minsAgo = parseFloat(input.value || '0');
+        if(isNaN(minsAgo) || minsAgo < 0){ alert('Enter how many minutes ago it died (0 for just now).'); return; }
+        ts = Date.now() - minsAgo*60000;
+      }
+      mvp.killedAt = ts;
+      mvp.notifiedWindow = false;
+      mvp.notified3Min = false;
+      mvp.notified1Min = false;
+      mvp.exactAt = null;
+      mvp.notifiedExact = false;
+      mvp.blinkMuted = false;
+      mvp.lastKillBy = action === 'logmykill' ? (username || 'Anonymous') : 'Someone else';
+      if(action === 'logmykill'){
+        mvp.killLog = mvp.killLog || [];
+        mvp.killLog.push({ ts, mirror: mirrorDrafts.has(id) });
+        trimKillLog(mvp);
+        mvp.totalKills = (mvp.totalKills || 0) + 1;
+        globalKillCount += 1;
+        saveKillCount();
+        renderKillStats();
+      }
+      if(mirrorDrafts.has(id)){
+        mirrorLog.push(ts);
+        saveMirrorLog();
+        renderMirrorStats();
+      }
+      closeLogForm();
+    } else if(action === 'pinmodehm'){
+      pinMode.set(id, 'hm');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .pin-h-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'pinmodeminutes'){
+      pinMode.set(id, 'minutes');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .pin-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'pinmodekilltime'){
+      pinMode.set(id, 'killtime');
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .pin-killtime-input`);
+      if(input) input.focus();
+      return;
+    } else if(action === 'clearpin'){
+      mvp.exactAt = null;
+      mvp.notifiedExact = false;
+      mvp.notified3Min = false;
+      mvp.notified1Min = false;
+      mvp.blinkMuted = false;
+    } else if(action === 'setpinmine' || action === 'setpinother'){
+      const mode = pinMode.get(id) || 'hm';
+      let ts;
+      if(mode === 'killtime'){
+        const ktInput = card.querySelector('.pin-killtime-input');
+        const killTsInput = gmtTimeToTimestamp((ktInput.value || '').trim());
+        if(killTsInput === null){ alert('Enter the GMT kill time as HH:MM in 24-hour format, e.g. 14:32.'); return; }
+        ts = killTsInput + mvp.minMs;
+      } else if(mode === 'hm'){
+        const hInput = card.querySelector('.pin-h-input');
+        const mInput = card.querySelector('.pin-m-input');
+        ts = hoursMinutesToTimestamp((hInput.value || '').trim(), (mInput.value || '').trim());
+        if(ts === null){ alert('Enter hours and/or minutes until it respawns.'); return; }
+      } else {
+        const input = card.querySelector('.pin-input');
+        const val = parseFloat(input.value);
+        if(isNaN(val) || val < 0){ alert('Enter how many minutes from now it spawns.'); return; }
+        ts = Date.now() + val*60000;
+      }
+      mvp.exactAt = ts;
+      mvp.notifiedExact = false;
+      mvp.notified3Min = false;
+      mvp.notified1Min = false;
+      mvp.blinkMuted = false;
+      mvp.lastKillBy = action === 'setpinmine' ? (username || 'Anonymous') : 'Someone else';
+      const killTs = Date.now();
+      if(action === 'setpinmine'){
+        mvp.killLog = mvp.killLog || [];
+        mvp.killLog.push({ ts: killTs, mirror: mirrorDrafts.has(id) });
+        trimKillLog(mvp);
+        mvp.totalKills = (mvp.totalKills || 0) + 1;
+        globalKillCount += 1;
+        saveKillCount();
+        renderKillStats();
+      }
+      if(mirrorDrafts.has(id)){
+        mirrorLog.push(killTs);
+        saveMirrorLog();
+        renderMirrorStats();
+      }
+      closeLogForm();
+    } else if(action === 'opendetails' || action === 'closedetails'){
+      if(openDetails.has(id)) openDetails.delete(id);
+      else openDetails.add(id);
+      render();
+      return;
+    } else if(action === 'toggleblinkmute'){
+      mvp.blinkMuted = !mvp.blinkMuted;
+    } else if(action === 'openeditkilltime'){
+      editingRecentKill.add(id);
+      recentKillEditDrafts.delete(id);
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .recent-kill-time-input`);
+      if(input){ input.focus(); input.select(); }
+      return;
+    } else if(action === 'cancelkilltimeedit'){
+      editingRecentKill.delete(id);
+      recentKillEditDrafts.delete(id);
+      render();
+      return;
+    } else if(action === 'savekilltime'){
+      const oldTs = parseInt(btn.getAttribute('data-kill-ts'), 10);
+      const entry = (mvp.killLog || []).find(k => k.ts === oldTs);
+      if(!entry) return;
+      const input = card.querySelector('.recent-kill-time-input');
+      const newTs = gmtTimeToTimestamp((input.value || '').trim());
+      if(newTs === null){ alert('Enter the GMT time as HH:MM in 24-hour format, e.g. 14:32.'); return; }
+      entry.ts = newTs;
+      // Keep the active countdown in sync if this entry is the one currently driving it.
+      if(mvp.killedAt === oldTs) mvp.killedAt = newTs;
+      // Keep the global Convex Mirror log's timestamp in sync too, if this kill used one.
+      if(entry.mirror){
+        const mIdx = mirrorLog.indexOf(oldTs);
+        if(mIdx !== -1){ mirrorLog[mIdx] = newTs; saveMirrorLog(); renderMirrorStats(); }
+      }
+      editingRecentKill.delete(id);
+      recentKillEditDrafts.delete(id);
+      renderKillStats();
+    } else if(action === 'editname'){
+      editingNames.add(id);
+      render();
+      const input = document.querySelector(`.card[data-id="${id}"] .name-input`);
+      if(input){ input.focus(); input.select(); }
+      return;
+    } else if(action === 'cancelname'){
+      editingNames.delete(id);
+      render();
+      return;
+    } else if(action === 'savename'){
+      const input = card.querySelector('.name-input');
+      const val = input.value.trim();
+      if(!val){ alert('Name can\'t be empty.'); return; }
+      mvp.name = val;
+      editingNames.delete(id);
+    }
+    save(); render();
+  });
+
+  // Keep the pin-time input's in-progress value across the 1s re-render tick.
+  document.getElementById('grid').addEventListener('input', (e)=>{
+    if(e.target.classList.contains('recent-kill-mirror-check')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      const mvp = mvps.find(m => m.id === id);
+      if(!mvp) return;
+      const killTs = parseInt(e.target.getAttribute('data-kill-ts'), 10);
+      const entry = (mvp.killLog || []).find(k => k.ts === killTs);
+      if(!entry) return;
+      entry.mirror = e.target.checked;
+      if(entry.mirror){
+        if(!mirrorLog.includes(killTs)) mirrorLog.push(killTs);
+      } else {
+        const idx = mirrorLog.indexOf(killTs);
+        if(idx !== -1) mirrorLog.splice(idx, 1);
+      }
+      save();
+      saveMirrorLog();
+      renderMirrorStats();
+      render();
+    } else if(e.target.classList.contains('recent-kill-time-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      recentKillEditDrafts.set(id, e.target.value);
+      const ts = gmtTimeToTimestamp(e.target.value.trim());
+      const previewText = ts ? '= ' + fmtClock(ts) + ' your time' : '';
+      let previewEl = e.target.parentElement.querySelector('.pin-clock-preview');
+      if(previewText){
+        if(!previewEl){
+          previewEl = document.createElement('div');
+          previewEl.className = 'pin-clock-preview';
+          e.target.insertAdjacentElement('afterend', previewEl);
+        }
+        previewEl.textContent = previewText;
+      } else if(previewEl){
+        previewEl.remove();
+      }
+    } else if(e.target.classList.contains('mirror-checkbox')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      if(e.target.checked) mirrorDrafts.add(id);
+      else mirrorDrafts.delete(id);
+    } else if(e.target.classList.contains('pin-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      pinDrafts.set(id, e.target.value);
+    } else if(e.target.classList.contains('killlog-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      killLogDrafts.set(id, e.target.value);
+    } else if(e.target.classList.contains('killlog-gmt-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      killLogGmtDrafts.set(id, e.target.value);
+      // Update the live preview in place, without a full re-render (which would drop focus).
+      const ts = gmtTimeToTimestamp(e.target.value.trim());
+      const previewText = ts ? '= ' + new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) + ' your time' : '';
+      let previewEl = e.target.parentElement.querySelector('.killlog-gmt-preview');
+      if(previewText){
+        if(!previewEl){
+          previewEl = document.createElement('div');
+          previewEl.className = 'killlog-gmt-preview';
+          e.target.insertAdjacentElement('afterend', previewEl);
+        }
+        previewEl.textContent = previewText;
+      } else if(previewEl){
+        previewEl.remove();
+      }
+    } else if(e.target.classList.contains('pin-h-input') || e.target.classList.contains('pin-m-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      const row = e.target.closest('.pin-hm-row');
+      const hInput = row.querySelector('.pin-h-input');
+      const mInput = row.querySelector('.pin-m-input');
+      pinHDrafts.set(id, hInput.value);
+      pinMDrafts.set(id, mInput.value);
+      const ts = hoursMinutesToTimestamp(hInput.value.trim(), mInput.value.trim());
+      const previewText = ts ? '= ' + fmtClock(ts) : '';
+      let previewEl = row.parentElement.querySelector('.pin-clock-preview');
+      if(previewText){
+        if(!previewEl){
+          previewEl = document.createElement('div');
+          previewEl.className = 'pin-clock-preview';
+          row.insertAdjacentElement('afterend', previewEl);
+        }
+        previewEl.textContent = previewText;
+      } else if(previewEl){
+        previewEl.remove();
+      }
+    } else if(e.target.classList.contains('pin-killtime-input')){
+      const card = e.target.closest('.card');
+      const id = card.getAttribute('data-id');
+      const mvp = mvps.find(m => m.id === id);
+      pinKillTimeDrafts.set(id, e.target.value);
+      const killTs = mvp ? gmtTimeToTimestamp(e.target.value.trim()) : null;
+      const previewText = killTs ? '= respawns ' + fmtClock(killTs + mvp.minMs) : '';
+      let previewEl = e.target.parentElement.querySelector('.pin-clock-preview');
+      if(previewText){
+        if(!previewEl){
+          previewEl = document.createElement('div');
+          previewEl.className = 'pin-clock-preview';
+          e.target.insertAdjacentElement('afterend', previewEl);
+        }
+        previewEl.textContent = previewText;
+      } else if(previewEl){
+        previewEl.remove();
+      }
+    }
+  });
+
+  // Enter/Escape shortcuts for the inline name-edit input.
+  document.getElementById('grid').addEventListener('keydown', (e)=>{
+    if(!e.target.classList.contains('name-input')) return;
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      document.querySelector(`.card[data-id="${e.target.closest('.card').getAttribute('data-id')}"] .name-save-btn`).click();
+    } else if(e.key === 'Escape'){
+      e.preventDefault();
+      document.querySelector(`.card[data-id="${e.target.closest('.card').getAttribute('data-id')}"] .name-cancel-btn`).click();
+    }
+  });
+
+  load();
+  syncSortModeSelect();
+  syncViewModeSelect();
+  syncVolumeSlider();
+  applyTheme();
+  renderMirrorStats();
+  renderKillStats();
+  render();
+  if('speechSynthesis' in window){
+    cachedFemaleVoice = pickFemaleVoice(); // may already be loaded
+    window.speechSynthesis.onvoiceschanged = () => { cachedFemaleVoice = pickFemaleVoice(); };
+  }
+  initFirebase();
+  if('serviceWorker' in navigator){
+    // Registered relative to this page so it works under the GitHub Pages subpath too.
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+  setInterval(tick, 1000);
+})();
+</script>
+
+
+
+</body></html>
