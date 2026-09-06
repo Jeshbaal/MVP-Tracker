@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP Watch - Renewal Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161b;
+    --panel:#1c1f26;
+    --panel-alt:#232732;
+    --panel-hi:#2a2f3a;
+    --border:#2c313d;
+    --border-hi:#3a4051;
+    --text:#e9e7df;
+    --text-dim:#8b93a1;
+    --text-dimmer:#5d6472;
+    --gold:#d4af37;
+    --gold-dim:#8a7328;
+    --ember:#d1495b;
+    --ember-dim:#5a2732;
+    --teal:#3fae8b;
+    --teal-dim:#215c48;
+    --amber:#e0a458;
+    --amber-dim:#5f4526;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:220px;
+    flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:22px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  .brand{ padding:0 6px; }
+  .brand-mark{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:20px;
+    letter-spacing:0.2px;
+    line-height:1.15;
+    color:var(--text);
+  }
+  .brand-mark span{ color:var(--gold); }
+  .brand-sub{
+    font-size:11px;
+    color:var(--text-dimmer);
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    margin-top:4px;
+  }
+  .nav{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--text-dim);
+    cursor:pointer;
+    border:1px solid transparent;
+    user-select:none;
+  }
+  .nav-item.active{
+    background:var(--panel-alt);
+    color:var(--text);
+    border-color:var(--border-hi);
+  }
+  .nav-item:not(.active):hover{ color:var(--text); }
+  .nav-item.disabled{
+    color:var(--text-dimmer);
+    cursor:default;
+  }
+  .nav-icon{ width:16px; text-align:center; font-size:13px; opacity:0.9; }
+  .nav-soon{
+    margin-left:auto;
+    font-size:9.5px;
+    color:var(--text-dimmer);
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    border:1px solid var(--border-hi);
+    padding:2px 5px;
+    border-radius:5px;
+  }
+  .sidebar-foot{
+    margin-top:auto;
+    font-size:11px;
+    color:var(--text-dimmer);
+    padding:0 6px;
+    line-height:1.5;
+  }
+
+  /* ---------- Main ---------- */
+  .main{
+    flex:1;
+    padding:26px 34px 60px;
+    width:100%;
+  }
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .page-title{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .page-sub{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0;
+    max-width:520px;
+  }
+  .topbar-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:8px;
+    border:1px solid var(--border-hi);
+    background:var(--panel-alt);
+    color:var(--text);
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .btn:hover{ background:var(--panel-hi); }
+  .btn.primary{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#1a1608;
+  }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.danger{
+    background:var(--ember-dim);
+    border-color:var(--ember);
+    color:var(--text);
+  }
+  .btn.danger:hover{ background:var(--ember); }
+  .btn.ghost{
+    background:transparent;
+    border-color:var(--border);
+    color:var(--text-dim);
+    font-weight:500;
+  }
+
+  /* stats strip */
+  .stats{
+    display:flex;
+    gap:10px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    min-width:120px;
+  }
+  .stat-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    font-weight:600;
+    line-height:1;
+  }
+  .stat-label{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:5px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  .stat.window .stat-num{ color:var(--teal); }
+  .stat.overdue .stat-num{ color:var(--ember); }
+  .stat.cooldown .stat-num{ color:var(--amber); }
+
+  /* controls row */
+  .controls-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .search{
+    flex:1;
+    min-width:180px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:9px 12px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+  }
+  .search::placeholder{ color:var(--text-dimmer); }
+  .search:focus{ outline:none; border-color:var(--border-hi); }
+  select.filter{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:9px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+  }
+
+  /* card grid (fluid full screen width) */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:12px;
+    width:100%;
+  }
+
+  /* Standard Card Border Rules */
+  .card{
+    background:var(--panel);
+    border:2px solid var(--border); /* Double thickness default */
+    border-radius:var(--radius);
+    padding:14px 14px 12px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .card.state-window{ border-color:var(--teal); }
+  .card.state-overdue{ border-color:var(--ember); }
+
+  /* Pinned / Favorites Special Border Conditions */
+  .card.pinned{ 
+    border:1px solid var(--gold) !important; /* Original 1px thickness */
+    box-shadow:none;
+  }
+  .card.pinned.state-window{ 
+    box-shadow: 0 0 0 1px var(--teal); /* Outer 1px greenish border */
+  }
+  .card.pinned.state-overdue{ 
+    box-shadow: 0 0 0 1px var(--ember); /* Outer 1px red border */
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .card-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:15px;
+    line-height:1.2;
+  }
+  .card-name .pin-icon{
+    color:var(--gold);
+    font-size:12px;
+    margin-right:4px;
+  }
+  .card-map{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:2px;
+  }
+  .badge{
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    padding:2px 6px;
+    border-radius:4px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .badge.unknown{ background:var(--panel-alt); color:var(--text-dimmer); border:1px solid var(--border-hi); }
+  .badge.cooldown{ background:var(--amber-dim); color:var(--amber); }
+  .badge.window{ background:var(--teal-dim); color:var(--teal); }
+  .badge.overdue{ background:var(--ember-dim); color:var(--ember); }
+
+  .timer-block{ margin-top:2px; }
+  .timer-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:0.2px;
+  }
+  .timer-value.c-cooldown{ color:var(--amber); }
+  .timer-value.c-window{ color:var(--teal); }
+  .timer-value.c-overdue{ color:var(--ember); }
+  .timer-value.c-unknown{ color:var(--text-dimmer); font-size:13px; font-weight:500; font-family:'Inter',sans-serif;}
+  .timer-caption{
+    font-size:10px;
+    color:var(--text-dimmer);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin-top:1px;
+  }
+
+  .windowbar{
+    position:relative;
+    height:8px;
+    border-radius:4px;
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    overflow:hidden;
+    margin-top:2px;
+  }
+  .windowbar-fill{
+    position:absolute;
+    top:0; left:0; bottom:0;
+    border-radius:4px 0 0 4px;
+    transition:width .4s linear;
+  }
+  .windowbar-fill.c-cooldown{ background:var(--amber); }
+  .windowbar-fill.c-window{ background:var(--teal); }
+  .windowbar-fill.c-overdue{ background:var(--ember); width:100% !important; }
+  .windowbar-mark{
+    position:absolute;
+    top:-1px; bottom:-1px;
+    width:2px;
+    background:rgba(233,231,223,0.55);
+  }
+  .windowbar.pulse .windowbar-fill.c-window{ animation:pulseGlow 1.6s ease-in-out infinite; }
+  @keyframes pulseGlow{
+    0%,100%{ filter:brightness(1); }
+    50%{ filter:brightness(1.35); }
+  }
+
+  .range-caption{
+    font-size:10px;
+    color:var(--text-dimmer);
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  .card-actions{
+    display:flex;
+    gap:4px;
+    margin-top:4px;
+    flex-wrap:wrap;
+  }
+  .icon-btn{
+    background:var(--panel-alt);
+    border:1px solid var(--border-hi);
+    color:var(--text-dim);
+    border-radius:6px;
+    padding:5px 7px;
+    font-size:11px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .icon-btn:hover{ color:var(--text); background:var(--panel-hi); }
+  .icon-btn.kill{ color:var(--ember); }
+  .icon-btn.kill:hover{ background:var(--ember-dim); }
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-dim);
+    font-size:14px;
+  }
+
+  /* modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,11,14,0.65);
+    display:flex; align-items:center; justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--border-hi);
+    border-radius:12px;
+    width:100%;
+    max-width:420px;
+    padding:22px;
+  }
+  .modal h3{
+    font-family:'Fraunces',serif;
+    margin:0 0 4px;
+    font-size:19px;
+    font-weight:600;
+  }
+  .modal-sub{
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin:0 0 16px;
+  }
+  .field{ margin-bottom:12px; }
+  .field label{
+    display:block;
+    font-size:11.5px;
+    color:var(--text-dim);
+    margin-bottom:5px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  .field input{
+    width:100%;
+    background:var(--panel-alt);
+    border:1px solid var(--border-hi);
+    color:var(--text);
+    border-radius:7px;
+    padding:9px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+  }
+  .field input:focus{ outline:none; border-color:var(--gold-dim); }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:18px;
+  }
+  .field-hint{
+    font-size:11px;
+    color:var(--text-dimmer);
+    margin-top:4px;
+  }
+
+  ::selection{ background:var(--gold-dim); }
+
+  @media (max-width:720px){
+    #app{ flex-direction:column; }
+    .sidebar{ width:100%; flex-direction:row; align-items:center; padding:14px; overflow-x:auto; }
+    .brand{ flex-shrink:0; }
+    .sidebar-foot{ display:none; }
+    .nav{ flex-direction:row; }
+    .main{ padding:20px 16px 50px; }
+  }
+</style>
+
+<!-- FIREBASE SDKs (Compat Version for Simple Script Support) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+</head>
+<body>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">MVP <span>Watch</span></div>
+      <div class="brand-sub">Renewal Edition</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">Renewal Open-World &amp; Illusion Maps</div>
+  </aside>
+
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+/* =========================================================
+		CONFIGURATION
+   Replace the placeholder strings below with your keys from
+   Firebase Console -> Project Settings -> Your Apps -> Web
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU",
+  authDomain: "mvp-tracker-astrorpg.firebaseapp.com",
+  projectId: "mvp-tracker-astrorpg",
+  storageBucket: "mvp-tracker-astrorpg.firebasestorage.app",
+  messagingSenderId: "477188538102",
+  appId: "1:477188538102:web:c93fd3c9972044404176d7",
+  measurementId: "G-2C3PTQWH2G"
+};
+
+// Initialize Firebase (Safely checks if credentials are provided)
+let db = null;
+if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}
+
+(function(){
+
+  /* =========================================================
+     PERSISTENCE (Native localStorage)
+     ========================================================= */
+  const STORAGE_KEY = 'ro-mvp-spawns-renewal-v4';
+
+  function loadSpawns(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {
+      console.error('Failed to load from localStorage', e);
+    }
+    return null;
+  }
+
+  let saveTimer = null;
+  function saveSpawns(spawns){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(spawns));
+      } catch(e) {
+        console.error('Failed to save to localStorage', e);
+      }
+    }, 250);
+  }
+
+  /* =========================================================
+     DEFAULT RENEWAL MVP DATA
+     ========================================================= */
+  const DEFAULT_SPAWNS = [
+    // Pinned Favorites
+    {mvp:'Moonlight Flower', map:'Payon Dungeon 5 (pay_dun04)', min:60, max:70, pinned:true},
+    {mvp:'Illusion Moonlight', map:'Illusion of Moonlight (ill_payon)', min:60, max:90, pinned:true},
+    {mvp:'Eddga', map:'Payon Field 10 (pay_fild10)', min:120, max:130, pinned:true},
+    {mvp:'Baphomet', map:'Labyrinth Forest 3 (prt_maze03)', min:120, max:130, pinned:true},
+    {mvp:'Nightmare Baphomet', map:'Glast Heim Castle 2F (gl_cas02_)', min:120, max:130, pinned:true},
+    {mvp:'Golden Thief Bug', map:'Culverts 4 (prt_sewb4)', min:60, max:70, pinned:true},
+
+    // Standard Open-World & Illusion MVPs
+    {mvp:'Amon Ra', map:'Pyramids B1 (moc_pryd06)', min:60, max:70},
+    {mvp:'Atroce', map:'Rachel Field 02 (ra_fild02)', min:240, max:250},
+    {mvp:'Atroce', map:'Rachel Field 03 (ra_fild03)', min:180, max:190},
+    {mvp:'Atroce', map:'Veins Field 01 (ve_fild01)', min:180, max:190},
+    {mvp:'Atroce', map:'Veins Field 02 (ve_fild02)', min:360, max:370},
+    {mvp:'Beelzebub', map:'Abbey 3 (abbey03)', min:720, max:730},
+    {mvp:'Dark Lord', map:'Glast Heim Churchyard (gl_church)', min:60, max:70},
+    {mvp:'Detardeurus', map:'Abyss Lake 3 (abyss_03)', min:180, max:190},
+    {mvp:'Doppelganger', map:'Glast Heim Guild Dungeon (gld_dun02)', min:120, max:130},
+    {mvp:'Dracula', map:'Geffen Dungeon 2 (gef_dun02)', min:60, max:70},
+    {mvp:'Drake', map:'Sunken Ship 2 (treasure02)', min:120, max:130},
+    {mvp:'Eddga', map:'Payon Guild Dungeon (gld_dun01_2)', min:480, max:490},
+    {mvp:'Egnigem Cenia', map:'Lighthalzen Biolab 2 (lhz_dun02)', min:120, max:130},
+    {mvp:'Evil Snake Lord', map:'Hermit\'s Checkers (gon_dun02)', min:94, max:104},
+    {mvp:'Fallen Bishop Hibram', map:'Abbey 2 (abbey02)', min:120, max:130},
+    {mvp:'Garm / Hatii', map:'Lutie Field (xmas_fild01)', min:120, max:130},
+    {mvp:'Gloom Under Night', map:'Rachel Sanctuary 05 (ra_san05)', min:300, max:310},
+    {mvp:'Gopinich', map:'Moscovia Dungeon 3 (mosk_dun03)', min:120, max:130},
+    {mvp:'Ifrit', map:'Thor Volcano 3 (thor_v03)', min:660, max:670},
+    {mvp:'Incantation Samurai', map:'Amatsu Dungeon 3 (ama_dun03)', min:91, max:101},
+    {mvp:'Kiel D-01', map:'Kiel Robot Factory 2 (kh_dun02)', min:120, max:180},
+    {mvp:'Lady Tanee', map:'Ayothaya Dungeon 2 (ayo_dun02)', min:420, max:430},
+    {mvp:'Lord of Death', map:'Niflheim 2 (niflheim)', min:133, max:143},
+    {mvp:'Maya', map:'Ant Hell 2 (anthell02)', min:120, max:130},
+    {mvp:'Mistress', map:'Mt. Mjolnir 04 (mjolnir_04)', min:120, max:130},
+    {mvp:'Orc Hero', map:'Geffen Field 02 (gef_fild02)', min:144, max:154},
+    {mvp:'Orc Hero', map:'Geffen Field 14 (gef_fild14)', min:60, max:70},
+    {mvp:'Orc Lord', map:'Geffen Field 10 (gef_fild10)', min:120, max:130},
+    {mvp:'Osiris', map:'Sphinx 5 (in_sphinx5)', min:60, max:70},
+    {mvp:'Pharaoh', map:'Sphinx 4 (in_sphinx4)', min:60, max:70},
+    {mvp:'Phreeoni', map:'Morroc Field 15 (moc_fild15)', min:120, max:130},
+    {mvp:'RSX-0806', map:'Mine Dungeon 2 (ein_dun02)', min:125, max:135},
+    {mvp:'Stormy Knight', map:'Lutie Toy Factory 2 (xmas_dun02)', min:60, max:70},
+    {mvp:'Tao Gunka', map:'West Cave Karu (beach_dun02)', min:300, max:310},
+    {mvp:'Turtle General', map:'Turtle Palace (tur_dun04)', min:60, max:70},
+    {mvp:'Vesper', map:'Juperos Core (jupe_core)', min:120, max:130},
+    {mvp:'White Lady / Bacsojin', map:'Louyang Dungeon 3 (lou_dun03)', min:117, max:127},
+
+    // Biolab MVPs
+    {mvp:'Assassin Cross Eremes', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+    {mvp:'High Priest Margaretha', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+    {mvp:'High Wizard Kathryne', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+    {mvp:'Lord Knight Seyren', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+    {mvp:'Sniper Cecil', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+    {mvp:'Whitesmith Howard', map:'Lighthalzen Biolab 3 (lhz_dun03)', min:100, max:140},
+
+    // Illusion Dungeons
+    {mvp:'Illusion Vampire', map:'Illusion of Vampire (ill_geffen)', min:60, max:90},
+    {mvp:'Illusion Baphomet', map:'Illusion of Frozen (ill_prt)', min:60, max:90},
+    {mvp:'Illusion Turtle General', map:'Illusion of Turtle (ill_tur_dun)', min:60, max:90},
+    {mvp:'Illusion Teddy Bear', map:'Illusion of Teddy Bear (ill_ein)', min:60, max:90},
+
+    // Guild Dungeon MVPs
+    {mvp:'Maya', map:'Luina Guild Dungeon (gld_dun01)', min:480, max:490},
+    {mvp:'Doppelganger', map:'Valkyrie Guild Dungeon (gld_dun02)', min:480, max:490},
+    {mvp:'Dark Lord', map:'Britoniah Guild Dungeon (gld_dun03)', min:480, max:490},
+    {mvp:'Baphomet', map:'Greenwood Guild Dungeon (gld_dun04)', min:480, max:490},
+  ].map((s,i)=>({ id:'d'+i, killTime:null, custom:false, pinned:!!s.pinned, ...s }));
+
+  function uid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+  let spawns = [];
+  let searchTerm = '';
+  let statusFilter = 'all';
+  let editingId = null;
+
+  /* =========================================================
+     MODULE REGISTRY
+     ========================================================= */
+  const MODULES = [
+    { id:'mvp-timers', label:'MVP Timers', icon:'\u2694', render: renderMvpTimers },
+    { id:'drops', label:'Drop Tracker', icon:'\u2318', comingSoon:true },
+    { id:'party', label:'Party Loot', icon:'\u2726', comingSoon:true },
+  ];
+  let activeModule = 'mvp-timers';
+
+  /* =========================================================
+     TIME HELPERS
+     ========================================================= */
+  function fmtDuration(ms){
+    const neg = ms < 0;
+    ms = Math.abs(ms);
+    const totalSec = Math.floor(ms/1000);
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    const pad = n => String(n).padStart(2,'0');
+    return (neg?'-':'') + (h>0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`);
+  }
+
+  function computeStatus(spawn, now){
+    if(!spawn.killTime){
+      return { state:'unknown' };
+    }
+    const earliest = spawn.killTime + spawn.min*60000;
+    const latest = spawn.killTime + spawn.max*60000;
+    if(now < earliest){
+      return { state:'cooldown', earliest, latest, toEarliest: earliest-now, toLatest: latest-now };
+    }else if(now <= latest){
+      return { state:'window', earliest, latest, sinceEarliest: now-earliest, toLatest: latest-now };
+    }else{
+      return { state:'overdue', earliest, latest, sinceLatest: now-latest };
+    }
+  }
+
+  function sortSpawns(list, now){
+    const priority = { window:0, overdue:1, cooldown:2, unknown:3 };
+    return [...list].sort((a,b)=>{
+      // ABSOLUTE PRIORITY: Pinned items always stay at top
+      if(a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+
+      const sa = computeStatus(a, now), sb = computeStatus(b, now);
+      // Secondary priority: Status priority
+      if(priority[sa.state] !== priority[sb.state]) return priority[sa.state]-priority[sb.state];
+
+      // Intra-status sorting
+      if(sa.state==='window') return sa.sinceEarliest - sb.sinceEarliest;
+      if(sa.state==='cooldown') return sa.toEarliest - sb.toEarliest;
+      if(sa.state==='overdue') return sb.sinceLatest - sa.sinceLatest;
+      return a.mvp.localeCompare(b.mvp);
+    });
+  }
+
+  /* =========================================================
+     RENDER: SIDEBAR NAV
+     ========================================================= */
+  function renderNav(){
+    const nav = document.getElementById('nav');
+    nav.innerHTML = '';
+    MODULES.forEach(mod=>{
+      const el = document.createElement('div');
+      el.className = 'nav-item' + (mod.id===activeModule?' active':'') + (mod.comingSoon?' disabled':'');
+      el.innerHTML = `<span class="nav-icon">${mod.icon}</span><span>${mod.label}</span>` +
+        (mod.comingSoon ? '<span class="nav-soon">Soon</span>' : '');
+      if(!mod.comingSoon){
+        el.onclick = ()=>{ activeModule = mod.id; renderNav(); renderMain(); };
+      }
+      nav.appendChild(el);
+    });
+  }
+
+  function renderMain(){
+    const main = document.getElementById('main');
+    main.innerHTML = '';
+    const mod = MODULES.find(m=>m.id===activeModule);
+    if(mod && mod.render) mod.render(main);
+  }
+
+  /* =========================================================
+     MODULE: MVP TIMERS
+     ========================================================= */
+  function renderMvpTimers(container){
+    const now = Date.now();
+    const counts = { window:0, overdue:0, cooldown:0, unknown:0 };
+    spawns.forEach(s=> counts[computeStatus(s, now).state]++ );
+
+    container.innerHTML = `
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">MVP Timers</h1>
+          <p class="page-sub">Mark a kill to start that map's respawn window. Pinned favorites stay permanently pinned at top.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn ghost" id="btn-restore">Restore defaults</button>
+          <button class="btn primary" id="btn-add">+ Add MVP</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat window"><div class="stat-num">${counts.window}</div><div class="stat-label">Window open</div></div>
+        <div class="stat overdue"><div class="stat-num">${counts.overdue}</div><div class="stat-label">Overdue</div></div>
+        <div class="stat cooldown"><div class="stat-num">${counts.cooldown}</div><div class="stat-label">On cooldown</div></div>
+        <div class="stat"><div class="stat-num">${counts.unknown}</div><div class="stat-label">Not tracking</div></div>
+      </div>
+
+      <div class="controls-row">
+        <input class="search" id="search" placeholder="Search MVP or map&hellip;" value="${escapeAttr(searchTerm)}">
+        <select class="filter" id="filter">
+          <option value="all">All statuses</option>
+          <option value="window">Window open</option>
+          <option value="overdue">Overdue</option>
+          <option value="cooldown">On cooldown</option>
+          <option value="unknown">Not tracking</option>
+        </select>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    `;
+
+    document.getElementById('search').value = searchTerm;
+    document.getElementById('filter').value = statusFilter;
+    document.getElementById('search').oninput = (e)=>{ searchTerm = e.target.value; renderGrid(); };
+    document.getElementById('filter').onchange = (e)=>{ statusFilter = e.target.value; renderGrid(); };
+    document.getElementById('btn-add').onclick = ()=> openEditModal('new');
+    document.getElementById('btn-restore').onclick = ()=> confirmRestoreDefaults();
+
+    renderGrid();
+    startTicker();
+  }
+
+  function filteredSpawns(){
+    const now = Date.now();
+    let list = spawns;
+    if(searchTerm.trim()){
+      const q = searchTerm.trim().toLowerCase();
+      list = list.filter(s => s.mvp.toLowerCase().includes(q) || s.map.toLowerCase().includes(q));
+    }
+    if(statusFilter !== 'all'){
+      list = list.filter(s => computeStatus(s, now).state === statusFilter);
+    }
+    return sortSpawns(list, now);
+  }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid');
+    if(!grid) return;
+    const now = Date.now();
+    const list = filteredSpawns();
+
+    if(list.length === 0){
+      grid.innerHTML = `<div class="empty-state">No MVPs match. Try clearing the search or filter.</div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(s => cardHtml(s, now)).join('');
+
+    list.forEach(s=>{
+      const card = grid.querySelector(`[data-id="${s.id}"]`);
+      if(!card) return;
+      card.querySelector('.kill').onclick = ()=> markKilled(s.id);
+      const clearBtn = card.querySelector('.clear');
+      if(clearBtn) clearBtn.onclick = ()=> clearKill(s.id);
+      card.querySelector('.edit').onclick = ()=> openEditModal(s.id);
+    });
+  }
+
+  function cardHtml(s, now){
+    const status = computeStatus(s, now);
+    const state = status.state;
+    let timerHtml, barHtml, rangeHtml;
+
+    if(state === 'unknown'){
+      timerHtml = `<div class="timer-value c-unknown">Not currently tracked</div>`;
+      barHtml = `<div class="windowbar"><div class="windowbar-fill" style="width:0%"></div></div>`;
+      rangeHtml = `<div class="range-caption"><span>${s.min}m</span><span>${s.max}m</span></div>`;
+    }else if(state === 'cooldown'){
+      const span = s.max*60000;
+      const elapsed = now - s.killTime;
+      const pct = Math.min(100, (elapsed/span)*100);
+      const minPct = (s.min/s.max)*100;
+      timerHtml = `<div class="timer-value c-cooldown">${fmtDuration(status.toEarliest)}</div><div class="timer-caption">until window opens</div>`;
+      barHtml = `<div class="windowbar"><div class="windowbar-fill c-cooldown" style="width:${pct}%"></div><div class="windowbar-mark" style="left:${minPct}%"></div></div>`;
+      rangeHtml = `<div class="range-caption"><span>killed ${fmtAgo(elapsed)} ago</span><span>max ${s.max}m</span></div>`;
+    }else if(state === 'window'){
+      timerHtml = `<div class="timer-value c-window">${fmtDuration(status.toLatest)}</div><div class="timer-caption">until window closes</div>`;
+      const span = s.max*60000 - s.min*60000;
+      const pct = span>0 ? Math.min(100, (status.sinceEarliest/span)*100) : 100;
+      barHtml = `<div class="windowbar pulse"><div class="windowbar-fill c-window" style="width:${pct}%"></div></div>`;
+      rangeHtml = `<div class="range-caption"><span>window opened ${fmtAgo(status.sinceEarliest)} ago</span><span>could pop any moment</span></div>`;
+    }else{
+      timerHtml = `<div class="timer-value c-overdue">${fmtDuration(status.sinceLatest)}</div><div class="timer-caption">overdue &mdash; check map</div>`;
+      barHtml = `<div class="windowbar"><div class="windowbar-fill c-overdue"></div></div>`;
+      rangeHtml = `<div class="range-caption"><span>should be up already</span><span></span></div>`;
+    }
+
+    const badgeLabel = { unknown:'Untracked', cooldown:'Cooldown', window:'Window open', overdue:'Overdue' }[state];
+
+    return `
+    <div class="card state-${state} ${s.pinned ? 'pinned' : ''}" data-id="${s.id}">
+      <div class="card-top">
+        <div>
+          <div class="card-name">${s.pinned ? '<span class="pin-icon">\u2605</span>' : ''}${escapeHtml(s.mvp)}</div>
+          <div class="card-map">${escapeHtml(s.map)}</div>
+        </div>
+        <span class="badge ${state}">${badgeLabel}</span>
+      </div>
+      <div class="timer-block">${timerHtml}</div>
+      ${barHtml}
+      ${rangeHtml}
+      <div class="card-actions">
+        <button class="icon-btn kill">${s.killTime ? 'Re-mark killed' : 'Mark killed'}</button>
+        ${s.killTime ? '<button class="icon-btn clear">Clear</button>' : ''}
+        <button class="icon-btn edit">Edit</button>
+      </div>
+    </div>`;
+  }
+
+  function fmtAgo(ms){
+    const totalMin = Math.floor(ms/60000);
+    if(totalMin < 60) return `${totalMin}m`;
+    const h = Math.floor(totalMin/60), m = totalMin%60;
+    return `${h}h ${m}m`;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(str){ return escapeHtml(str); }
+
+  /* ---- ticking countdown ---- */
+  let tickerHandle = null;
+  function startTicker(){
+    if(tickerHandle) clearInterval(tickerHandle);
+    tickerHandle = setInterval(()=>{
+      if(activeModule !== 'mvp-timers') return;
+      renderGrid();
+      refreshStats();
+    }, 1000);
+  }
+
+  /* =========================================================
+     ACTIONS
+     ========================================================= */
+  function markKilled(id){
+    const s = spawns.find(x=>x.id===id);
+    if(!s) return;
+    s.killTime = Date.now();
+    saveSpawns(spawns);
+    renderGrid();
+    refreshStats();
+  }
+  function clearKill(id){
+    const s = spawns.find(x=>x.id===id);
+    if(!s) return;
+    s.killTime = null;
+    saveSpawns(spawns);
+    renderGrid();
+    refreshStats();
+  }
+  function deleteMvp(id){
+    openConfirmModal({
+      title:'Delete MVP Tile?',
+      body:'Are you sure you want to delete this MVP entry? This cannot be undone.',
+      confirmLabel:'Delete',
+      onConfirm:()=>{
+        spawns = spawns.filter(x=>x.id!==id);
+        saveSpawns(spawns);
+        renderMain();
+      }
+    });
+  }
+  function refreshStats(){
+    const now = Date.now();
+    const counts = { window:0, overdue:0, cooldown:0, unknown:0 };
+    spawns.forEach(s=> counts[computeStatus(s, now).state]++ );
+    const statEls = document.querySelectorAll('.stat .stat-num');
+    if(statEls.length===4){
+      statEls[0].textContent = counts.window;
+      statEls[1].textContent = counts.overdue;
+      statEls[2].textContent = counts.cooldown;
+      statEls[3].textContent = counts.unknown;
+    }
+  }
+
+  function confirmRestoreDefaults(){
+    openConfirmModal({
+      title:'Restore Renewal MVPs?',
+      body:'This restores default Renewal MVPs and pins. Custom entries will be kept.',
+      confirmLabel:'Restore',
+      onConfirm:()=>{
+        DEFAULT_SPAWNS.forEach(def=>{
+          if(!spawns.find(s=>s.map===def.map && s.mvp===def.mvp)){
+            spawns.push({ ...def });
+          }
+        });
+        saveSpawns(spawns);
+        renderMain();
+      }
+    });
+  }
+
+  /* =========================================================
+     EDIT / ADD MODAL
+     ========================================================= */
+  function openEditModal(id){
+    editingId = id;
+    const isNew = id === 'new';
+    const s = isNew ? { mvp:'', map:'', min:60, max:70, pinned:false } : spawns.find(x=>x.id===id);
+    if(!s) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${isNew ? 'Add MVP spawn' : 'Edit spawn'}</h3>
+        <p class="modal-sub">${isNew ? 'Add an MVP and its map spawn details.' : 'Update details, pinned status, or delete.'}</p>
+        <div class="field">
+          <label>MVP name</label>
+          <input type="text" id="f-mvp" value="${escapeAttr(s.mvp)}" placeholder="e.g. Eddga">
+        </div>
+        <div class="field">
+          <label>Map</label>
+          <input type="text" id="f-map" value="${escapeAttr(s.map)}" placeholder="e.g. Payon Field 10 (pay_fild10)">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Min respawn (min)</label>
+            <input type="number" id="f-min" min="1" value="${s.min}">
+          </div>
+          <div class="field">
+            <label>Max respawn (min)</label>
+            <input type="number" id="f-max" min="1" value="${s.max}">
+          </div>
+        </div>
+        <div class="field" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+          <input type="checkbox" id="f-pinned" ${s.pinned ? 'checked' : ''} style="width:auto;">
+          <label for="f-pinned" style="margin:0; cursor:pointer;">Pin to top of list</label>
+        </div>
+        <div class="field-hint">Respawn window opens at min, ends at max.</div>
+        <div class="modal-actions">
+          ${!isNew ? '<button class="btn danger" id="modal-delete" style="margin-right:auto;">Delete</button>' : ''}
+          <button class="btn ghost" id="modal-cancel">Cancel</button>
+          <button class="btn primary" id="modal-save">${isNew ? 'Add MVP' : 'Save changes'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+    overlay.querySelector('#modal-cancel').onclick = ()=> overlay.remove();
+    
+    if(!isNew){
+      overlay.querySelector('#modal-delete').onclick = ()=>{
+        overlay.remove();
+        deleteMvp(id);
+      };
+    }
+
+    overlay.querySelector('#modal-save').onclick = ()=>{
+      const mvp = overlay.querySelector('#f-mvp').value.trim();
+      const map = overlay.querySelector('#f-map').value.trim();
+      const min = parseInt(overlay.querySelector('#f-min').value, 10);
+      const max = parseInt(overlay.querySelector('#f-max').value, 10);
+      const pinned = overlay.querySelector('#f-pinned').checked;
+      if(!mvp || !map || !min || !max || min<1 || max<min){
+        alert('Please enter valid details (max must be \u2265 min).');
+        return;
+      }
+      if(isNew){
+        spawns.push({ id:uid(), mvp, map, min, max, killTime:null, custom:true, pinned });
+      }else{
+        Object.assign(s, { mvp, map, min, max, pinned });
+      }
+      saveSpawns(spawns);
+      overlay.remove();
+      renderMain();
+    };
+  }
+
+  function openConfirmModal({title, body, confirmLabel, onConfirm}){
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${escapeHtml(title)}</h3>
+        <p class="modal-sub">${escapeHtml(body)}</p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="c-cancel">Cancel</button>
+          <button class="btn primary" id="c-confirm">${escapeHtml(confirmLabel)}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+    overlay.querySelector('#c-cancel').onclick = ()=> overlay.remove();
+    overlay.querySelector('#c-confirm').onclick = ()=>{ onConfirm(); overlay.remove(); };
+  }
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+  function init(){
+    const stored = loadSpawns();
+    spawns = stored && stored.length ? stored : DEFAULT_SPAWNS.map(s=>({...s}));
+    renderNav();
+    renderMain();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
