@@ -1156,9 +1156,24 @@ try {
     const stored = loadLocalSpawns();
     spawns = stored && stored.length ? stored : DEFAULT_SPAWNS.map(s=>({...s}));
     renderNav();
-    renderMain();
-    subscribeToFirestore();
+auth.onAuthStateChanged((user) => {
+      if (user) {
+        renderMain();
+        subscribeToFirestore();
+      } else {
+        document.getElementById('app').innerHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; text-align: center; gap: 1rem;">
+            <h2>MVP Tracker Locked</h2>
+            <p style="color: var(--text-muted);">Please log in with an authorized account to view and edit timers.</p>
+            <button class="btn primary" id="initial-login-btn">Sign In</button>
+          </div>
+        `;
+        document.getElementById('initial-login-btn').onclick = () => openLoginModal();
+      }
+    });
   }
+
+  init();
 
   init();
 })();
