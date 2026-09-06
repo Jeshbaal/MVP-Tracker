@@ -772,6 +772,8 @@ try {
           <p class="page-sub">Mark a kill to start that map's respawn window. Pinned favorites stay permanently pinned at top.</p>
         </div>
         <div class="topbar-actions">
+          <span id="user-status" style="font-size: 0.85rem; color: var(--text-muted); align-self: center;"></span>
+          <button class="btn ghost" id="btn-auth">Login</button>
           <button class="btn ghost" id="btn-restore">Restore defaults</button>
           <button class="btn primary" id="btn-add">+ Add MVP</button>
         </div>
@@ -804,7 +806,27 @@ try {
     document.getElementById('filter').onchange = (e)=>{ statusFilter = e.target.value; renderGrid(); };
     document.getElementById('btn-add').onclick = ()=> openEditModal('new');
     document.getElementById('btn-restore').onclick = ()=> confirmRestoreDefaults();
-
+   const authBtn = document.getElementById('btn-auth');
+    const userStatus = document.getElementById('user-status');
+    
+    if (auth) {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          if (userStatus) userStatus.textContent = user.email;
+          if (authBtn) {
+            authBtn.textContent = 'Logout';
+            authBtn.onclick = () => auth.signOut();
+          }
+        } else {
+          if (userStatus) userStatus.textContent = 'Not logged in';
+          if (authBtn) {
+            authBtn.textContent = 'Login';
+            authBtn.onclick = () => openLoginModal();
+          }
+        }
+      });
+    }
+    
     renderGrid();
     startTicker();
   }
@@ -1081,6 +1103,50 @@ try {
     overlay.querySelector('#c-confirm').onclick = ()=>{ onConfirm(); overlay.remove(); };
   }
 
+  /* =========================================================
+     LOGIN MODAL
+     ========================================================= */
+  function openLoginModal(){
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>Account Login</h3>
+        <p class="modal-sub">Sign in to edit timers and update kills.</p>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="auth-email" placeholder="user@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="auth-pass" placeholder="••••••••">
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="auth-cancel">Cancel</button>
+          <button class="btn primary" id="auth-submit">Sign In</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+    overlay.querySelector('#auth-cancel').onclick = ()=> overlay.remove();
+
+    overlay.querySelector('#auth-submit').onclick = ()=>{
+      const email = overlay.querySelector('#auth-email').value.trim();
+      const pass = overlay.querySelector('#auth-pass').value;
+      if (!email || !pass) {
+        alert('Please enter both email and password.');
+        return;
+      }
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => {
+          overlay.remove();
+        })
+        .catch((err) => {
+          alert('Login failed: ' + err.message);
+        });
+    };
+  }
   /* =========================================================
      INIT
      ========================================================= */
