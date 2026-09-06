@@ -1,11 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MVP Watch - Renewal Edition</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Ragnarok Online - MVP Respawn Tracker</title>
+
+<!-- Firebase SDKs (v8 Compatibility Layer) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <style>
   :root{
     --bg:#14161b;
@@ -499,9 +501,7 @@
 
 <script>
 /* =========================================================
-		CONFIGURATION
-   Replace the placeholder strings below with your keys from
-   Firebase Console -> Project Settings -> Your Apps -> Web
+   CONFIGURATION
    ========================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU",
@@ -513,21 +513,25 @@ const firebaseConfig = {
   measurementId: "G-2C3PTQWH2G"
 };
 
-// Initialize Firebase (Safely checks if credentials are provided)
+// Initialize Firebase
 let db = null;
-if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
+try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  console.log("Firebase initialized successfully.");
+} catch (e) {
+  console.error("Firebase initialization failed:", e);
 }
 
 (function(){
 
   /* =========================================================
-     PERSISTENCE (Native localStorage)
+     PERSISTENCE & FIRESTORE SYNC
      ========================================================= */
   const STORAGE_KEY = 'ro-mvp-spawns-renewal-v4';
+  const FIRESTORE_COLLECTION = 'mvp_spawns';
 
-  function loadSpawns(){
+  function loadLocalSpawns(){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw);
@@ -537,16 +541,61 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
     return null;
   }
 
-  let saveTimer = null;
-  function saveSpawns(spawns){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(()=>{
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(spawns));
-      } catch(e) {
-        console.error('Failed to save to localStorage', e);
+  function saveLocalSpawns(spawnsData){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(spawnsData));
+    } catch(e) {
+      console.error('Failed to save to localStorage', e);
+    }
+  }
+
+  // Real-time Firestore Listener
+  function subscribeToFirestore(){
+    if (!db) return;
+    db.collection(FIRESTORE_COLLECTION).onSnapshot((snapshot) => {
+      if (snapshot.empty) {
+        seedFirestoreDefaults();
+        return;
       }
-    }, 250);
+      const remoteSpawns = [];
+      snapshot.forEach(doc => {
+        remoteSpawns.push({ id: doc.id, ...doc.data() });
+      });
+      spawns = remoteSpawns;
+      saveLocalSpawns(spawns);
+      if (activeModule === 'mvp-timers') {
+        renderGrid();
+        refreshStats();
+      }
+    }, (error) => {
+      console.error("Firestore sync error:", error);
+    });
+  }
+
+  function seedFirestoreDefaults(){
+    if (!db) return;
+    const batch = db.batch();
+    DEFAULT_SPAWNS.forEach(spawn => {
+      const docRef = db.collection(FIRESTORE_COLLECTION).doc(spawn.id);
+      batch.set(docRef, spawn);
+    });
+    batch.commit().then(() => {
+      console.log("Seeded default MVPs to Firestore.");
+    }).catch(err => console.error("Error seeding Firestore:", err));
+  }
+
+  function syncSpawnToFirestore(spawn){
+    saveLocalSpawns(spawns);
+    if (!db) return;
+    db.collection(FIRESTORE_COLLECTION).doc(spawn.id).set(spawn, { merge: true })
+      .catch(err => console.error("Error writing to Firestore:", err));
+  }
+
+  function deleteSpawnFromFirestore(id){
+    saveLocalSpawns(spawns);
+    if (!db) return;
+    db.collection(FIRESTORE_COLLECTION).doc(id).delete()
+      .catch(err => console.error("Error deleting from Firestore:", err));
   }
 
   /* =========================================================
@@ -673,14 +722,9 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
   function sortSpawns(list, now){
     const priority = { window:0, overdue:1, cooldown:2, unknown:3 };
     return [...list].sort((a,b)=>{
-      // ABSOLUTE PRIORITY: Pinned items always stay at top
       if(a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-
       const sa = computeStatus(a, now), sb = computeStatus(b, now);
-      // Secondary priority: Status priority
       if(priority[sa.state] !== priority[sb.state]) return priority[sa.state]-priority[sb.state];
-
-      // Intra-status sorting
       if(sa.state==='window') return sa.sinceEarliest - sb.sinceEarliest;
       if(sa.state==='cooldown') return sa.toEarliest - sb.toEarliest;
       if(sa.state==='overdue') return sb.sinceLatest - sa.sinceLatest;
@@ -689,7 +733,7 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
   }
 
   /* =========================================================
-     RENDER: SIDEBAR NAV
+     RENDER: SIDEBAR NAV & MAIN
      ========================================================= */
   function renderNav(){
     const nav = document.getElementById('nav');
@@ -882,18 +926,20 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
     const s = spawns.find(x=>x.id===id);
     if(!s) return;
     s.killTime = Date.now();
-    saveSpawns(spawns);
+    syncSpawnToFirestore(s);
     renderGrid();
     refreshStats();
   }
+
   function clearKill(id){
     const s = spawns.find(x=>x.id===id);
     if(!s) return;
     s.killTime = null;
-    saveSpawns(spawns);
+    syncSpawnToFirestore(s);
     renderGrid();
     refreshStats();
   }
+
   function deleteMvp(id){
     openConfirmModal({
       title:'Delete MVP Tile?',
@@ -901,11 +947,12 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
       confirmLabel:'Delete',
       onConfirm:()=>{
         spawns = spawns.filter(x=>x.id!==id);
-        saveSpawns(spawns);
+        deleteSpawnFromFirestore(id);
         renderMain();
       }
     });
   }
+
   function refreshStats(){
     const now = Date.now();
     const counts = { window:0, overdue:0, cooldown:0, unknown:0 };
@@ -928,9 +975,9 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
         DEFAULT_SPAWNS.forEach(def=>{
           if(!spawns.find(s=>s.map===def.map && s.mvp===def.mvp)){
             spawns.push({ ...def });
+            syncSpawnToFirestore(def);
           }
         });
-        saveSpawns(spawns);
         renderMain();
       }
     });
@@ -1002,12 +1049,14 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
         alert('Please enter valid details (max must be \u2265 min).');
         return;
       }
+      let targetSpawn;
       if(isNew){
-        spawns.push({ id:uid(), mvp, map, min, max, killTime:null, custom:true, pinned });
+        targetSpawn = { id:uid(), mvp, map, min, max, killTime:null, custom:true, pinned };
+        spawns.push(targetSpawn);
       }else{
-        Object.assign(s, { mvp, map, min, max, pinned });
+        targetSpawn = Object.assign(s, { mvp, map, min, max, pinned });
       }
-      saveSpawns(spawns);
+      syncSpawnToFirestore(targetSpawn);
       overlay.remove();
       renderMain();
     };
@@ -1036,10 +1085,11 @@ if (firebaseConfig.apiKey !== "AIzaSyDaR-N7FdG9SnUdtkujVu-ddglj0bjFtsU") {
      INIT
      ========================================================= */
   function init(){
-    const stored = loadSpawns();
+    const stored = loadLocalSpawns();
     spawns = stored && stored.length ? stored : DEFAULT_SPAWNS.map(s=>({...s}));
     renderNav();
     renderMain();
+    subscribeToFirestore();
   }
 
   init();
