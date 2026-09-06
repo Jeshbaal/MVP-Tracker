@@ -516,9 +516,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 let db = null;
+let auth = null; // <-- Make sure auth is declared here
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  auth = firebase.auth(); // <-- Make sure auth is initialized here
   console.log("Firebase initialized successfully.");
 } catch (e) {
   console.error("Firebase initialization failed:", e);
